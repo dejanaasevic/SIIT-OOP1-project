@@ -1,6 +1,6 @@
 package manager;
 
-import hotel.AdditionalService;
+import entity.AdditionalService;
 
 public class AdditionalServiceManager extends AbstractManager<AdditionalService> {
 

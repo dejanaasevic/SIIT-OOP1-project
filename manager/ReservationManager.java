@@ -1,6 +1,6 @@
 package manager;
 
-import hotel.Reservation;
+import entity.Reservation;
 
 public class ReservationManager extends AbstractManager<Reservation>{
 

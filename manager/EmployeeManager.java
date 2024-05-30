@@ -1,6 +1,6 @@
 package manager;
 
-import hotel.Employee;
+import entity.Employee;
 
 public class EmployeeManager extends AbstractManager<Employee>  {
 	

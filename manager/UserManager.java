@@ -1,6 +1,6 @@
 package manager;
 
-import hotel.User;
+import entity.User;
 
 public class UserManager extends AbstractManager<User>{
 

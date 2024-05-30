@@ -3,7 +3,7 @@ package manager;
 import java.util.ArrayList;
 import java.util.List;
 
-import hotel.ReservationRequest;
+import entity.ReservationRequest;
 
 public class ReservationRequestManager {
 	private List<ReservationRequest> reservationRequests;

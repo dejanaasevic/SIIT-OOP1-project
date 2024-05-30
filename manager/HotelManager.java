@@ -3,16 +3,17 @@ package manager;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-import hotel.AdditionalService;
-import hotel.Administrator;
-import hotel.Guest;
-import hotel.Housekeeper;
-import hotel.PriceList;
-import hotel.Receptionist;
-import hotel.Reservation;
-import hotel.ReservationRequest;
-import hotel.ReservationStatus;
-import hotel.Room;
+import entity.AdditionalService;
+import entity.Administrator;
+import entity.Employee;
+import entity.Guest;
+import entity.Housekeeper;
+import entity.PriceList;
+import entity.Receptionist;
+import entity.Reservation;
+import entity.ReservationRequest;
+import entity.ReservationStatus;
+import entity.Room;
 
 public class HotelManager {
     private AdministratorManager administrators;
@@ -69,6 +70,10 @@ public class HotelManager {
     public PriceListManager getPriceLists() {
         return priceLists;
     }
+    
+    public ReservationRequestManager getReservationRequests() {
+    	return reservationRequests;
+    }
 
     public ReservationManager getReservations() {
         return reservations;
@@ -107,12 +112,12 @@ public class HotelManager {
 		}
 			
 	}
-
 	public void addHousekeeper(Housekeeper housekeeper) {
 		if(housekeepers.add(housekeeper.getUsername(), housekeeper) &&
 		employees.add(housekeeper.getUsername(), housekeeper)) {
 			System.out.printf("Uspešno ste dodali sobaricu: %s %s\n\n",
 					housekeeper.getName(), housekeeper.getSurname());
+			
 		}
 		else {
 			System.out.printf("Sobarica %s %s već postoji u sistemu.\n\n"
@@ -130,6 +135,7 @@ public class HotelManager {
 		 && employees.remove(receptionist.getUsername())){
 			System.out.printf("Uspešno ste uklonili recepcionera: %s %s.\n\n"
 					, receptionist.getName(), receptionist.getSurname());
+			
 		}
 		else {
 			System.out.printf("Recepcionera %s %s ne postoji u sistemu. \n\n"
@@ -256,5 +262,124 @@ public class HotelManager {
 		else {
 			System.out.println("Rezervacija već postoji.\n");
 		}
+	}
+	
+	public String getUserType(String username) {
+		if(administrators.isExists(username)) {
+			return "administrator";
+		}
+		else if (guests.isExists(username)) {
+			return "guest";
+		}
+		else if (housekeepers.isExists(username)) {
+			return "housekeeper";
+		}
+		else if (receptionists.isExists(username)) {
+			return "receptionist";
+		}
+		return null;
+	}
+
+	public boolean validPassword(String username, String password) {
+		String userType = this.getUserType(username);
+		if (userType.equals("administrator")) {
+			Administrator administrator = administrators.FindById(username);
+			if(administrator.getPassword().equals(password)){
+				return true;
+			}
+			return false;
+		}
+		
+		else if (userType.equals("housekeeper")) {
+			Housekeeper housekeeper = housekeepers.FindById(username);
+			if(housekeeper.getPassword().equals(password)) {
+				return true;
+			}
+			return false;
+		}
+		
+		else if (userType.equals("guest")) {
+			Guest guest = guests.FindById(username);
+			if(guest.getPassword().equals(password)) {
+				return true;
+			}
+			return false;
+		}
+		
+		else if (userType.equals("receptionist")) {
+			Receptionist receptionist = receptionists.FindById(username);
+			if(receptionist.getPassword().equals(password)) {
+				return true;
+			}
+			return false;
+		}
+		
+		return false;
+	}
+
+	public void updateEmployee(Employee employeeToUpdate) {
+	    String userType = getUserType(employeeToUpdate.getUsername());
+	    
+	    if (userType.equals("receptionist")) {
+	    	Receptionist receptionist = (Receptionist)employeeToUpdate;
+	        if (receptionists.update(receptionist.getUsername(), receptionist)) {
+	            System.out.println("Podaci o recepcionistu su uspešno ažurirani.");
+	        } else {
+	            System.out.println("Greška prilikom ažuriranja podataka o recepcionistu.");
+	        }
+	    }
+	    
+	    if (userType.equals("housekeeper")) {
+	    	Housekeeper housekeeper = (Housekeeper)employeeToUpdate;
+	        if (housekeepers.update(housekeeper.getUsername(), housekeeper)) {
+	            System.out.println("Podaci o sobarici su uspešno ažurirani.");
+	        } else {
+	            System.out.println("Greška prilikom ažuriranja podataka o sobarici.");
+	        }
+	    }
+	}
+
+	public void deleteEmployee(Employee employeeToDelete) {
+	    String userType = getUserType(employeeToDelete.getUsername());
+	    if (employees.remove(employeeToDelete.getUsername())) {
+	    	System.out.println("Podaci o zaposlenom su uspešno obrisani.");
+	    }
+	    if (userType.equals("receptionist")) {
+	    	Receptionist receptionist = (Receptionist)employeeToDelete;
+	        if (receptionists.remove(receptionist.getUsername())) {
+	            System.out.println("Podaci o recepcionistu su uspešno obrisani.");
+	        } else {
+	            System.out.println("Greška prilikom brisanja podataka o recepcionistu.");
+	        }
+	    }
+	    
+	    if (userType.equals("housekeeper")) {
+	    	Housekeeper housekeeper = (Housekeeper)employeeToDelete;
+	        if (housekeepers.remove(housekeeper.getUsername())) {
+	            System.out.println("Podaci o sobarici su uspešno obrisani.");
+	        } else {
+	            System.out.println("Greška prilikom brisanja podataka o sobarici.");
+	        }
+	    }
+		
+	}
+
+	public void deleteGuest(Guest guestToDelete) {
+		if (guests.remove(guestToDelete.getUsername())) {
+	    	System.out.println("Podaci o gostu su uspešno obrisani.");
+	    }
+		
+	}
+
+	public void deleteRoom(Room roomToDelete) {
+		if (rooms.remove(roomToDelete.getRoomNumber())) {
+	    	System.out.println("Podaci o sobi su uspešno obrisani.");
+	    }
+	}
+
+	public void deleteAdditionalService(AdditionalService serviceToDelete) {
+		if (additionalServices.remove(serviceToDelete.getName())) {
+	    	System.out.println("Podaci o usluzi su uspešno obrisani.");
+	    }
 	}
 }

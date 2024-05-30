@@ -1,6 +1,6 @@
 package manager;
 
-import hotel.Room;
+import entity.Room;
 
 public class RoomManager extends AbstractManager<Room> {
 
