@@ -107,6 +107,18 @@ public class PriceList {
         return false;
     }
 
+    public void setRoomPrice(RoomType roomType, double newPrice) {
+        if (roomPrices.containsKey(roomType)) {
+            roomPrices.put(roomType, newPrice);
+        }
+    }
+
+    public void setAdditionalServicePrice(AdditionalService service, double newServicePrice) {
+        if (additionalServicePrices.containsKey(service.getName())) {
+            additionalServicePrices.put(service.getName(), newServicePrice);
+        }
+    }
+
     public String generateID() {
         String formattedStartDate = this.startDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String formattedEndDate = this.endDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -117,7 +129,7 @@ public class PriceList {
     public String getFormattedRoomPrices() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<RoomType, Double> entry : roomPrices.entrySet()) {
-            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(" ");
+            sb.append(entry.getKey()).append(":").append(entry.getValue()).append(" ");
         }
         return sb.toString().trim();
     }
@@ -125,8 +137,21 @@ public class PriceList {
     public String getFormattedAdditionalServicePrices() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, Double> entry : additionalServicePrices.entrySet()) {
-            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(" ");
+            sb.append(entry.getKey()).append(":").append(entry.getValue()).append(" ");
         }
         return sb.toString().trim();
+    }
+    
+    @Override
+    public String toString() {
+        return "Start date: " + startDate + "\n" +
+               "End date: " + endDate + "\n" +
+               "Room prices: " + getFormattedRoomPrices() + "\n" +
+               "Additional service prices: " + getFormattedAdditionalServicePrices();
+    }
+
+    
+    public String toCSVString() {
+        return startDate + ", " + endDate + ", " + getFormattedRoomPrices() + ", " + getFormattedAdditionalServicePrices();
     }
 }

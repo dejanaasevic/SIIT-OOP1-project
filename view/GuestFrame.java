@@ -58,7 +58,7 @@ public class GuestFrame extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         
-        JMenu reservationRequestMenu = new JMenu("Rezervacije");
+        JMenu reservationRequestMenu = new JMenu("Zahtev Rezervacije");
         menuBar.add(reservationRequestMenu);
         JMenuItem showreservationRequests = new JMenuItem("Pregledaj sve zahteve rezervacija");
         reservationRequestMenu.add(showreservationRequests);
@@ -68,7 +68,14 @@ public class GuestFrame extends JFrame {
         reservationRequestMenu.add(updatereservationRequests);
         JMenuItem deletereservationRequests = new JMenuItem("Obriši zahtev rezervacije");
         reservationRequestMenu.add(deletereservationRequests);
-		
+               
+        JMenu reservationMenu = new JMenu("Rezervacije");
+        menuBar.add(reservationMenu);
+        JMenuItem showReservation = new JMenuItem("Prikaz svih rezervacija");
+        reservationMenu.add(showReservation);
+        JMenuItem cancelReservation= new JMenuItem("Otkaži rezervaciju");
+        reservationMenu.add(cancelReservation);
+        
         showreservationRequests.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             	showUserReservationRequests();

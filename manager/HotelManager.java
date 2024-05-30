@@ -198,15 +198,6 @@ public class HotelManager {
 		}
 	}
 
-	public void updatePriceList(PriceList priceList, AdditionalService service, double price) {
-		if(priceLists.FindById(priceList.generateID()).updateAdditionalServicePrice(service, price)) {
-			System.out.printf("Uspešno ste promenili cenu usluge: %s u %.2f \n\n", service.getName(), price);
-		}
-		else {
-			System.out.printf("Dodatna usluga %s ne postoji u sistemu.\n\n", service.getName());
-		}
-	}
-
 	public void displayAvailableRoomTypes(LocalDate startDate, LocalDate endDate) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
 		System.out.println("Dostupni tipovi soba u periodu od "
@@ -382,4 +373,13 @@ public class HotelManager {
 	    	System.out.println("Podaci o usluzi su uspešno obrisani.");
 	    }
 	}
+
+	public void deletePriceList(PriceList priceList) {
+		if (priceLists.remove(priceList.generateID())) {
+	    	System.out.println("Podaci o cenovniku su uspešno obrisani.");
+	    }
+	}
+
+
+	
 }

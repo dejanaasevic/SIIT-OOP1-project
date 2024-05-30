@@ -3,6 +3,9 @@ package view;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
@@ -27,7 +30,7 @@ public class HousekeeperFrame extends JFrame {
 
 	private void initializeUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(500, 100, 800, 800);
+		setBounds(100, 50, 1500, 1000);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -36,6 +39,14 @@ public class HousekeeperFrame extends JFrame {
 		this.setVisible(true);
 		this.setResizable(false);
 		
+		JMenuBar menuBar = new JMenuBar();
+        setJMenuBar(menuBar);
+        
+		JMenu reservationMenu = new JMenu("Sobe");
+        menuBar.add(reservationMenu);
+        JMenuItem viewAssignedRooms = new JMenuItem("Prikaz soba dodeljenih za čišćenje");
+        reservationMenu.add(viewAssignedRooms);
+        JMenuItem confirmRoomCleaning = new JMenuItem("Potvrdi čišćenje sobe");
+        reservationMenu.add(confirmRoomCleaning);
 	}
-
 }

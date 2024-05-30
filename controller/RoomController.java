@@ -42,7 +42,7 @@ public class RoomController {
     }
 	
 	public boolean writeRoomToCSV(Room newRoom) {
-		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("src/data/rooms.csv", true)))) {
+		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename, true)))) {
             writer.println(newRoom.toCSVString());
             return true;
         } catch (IOException e) {

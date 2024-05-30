@@ -57,19 +57,47 @@ public class ReceptionistFrame extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         
-        JMenu reservationRequestMenu = new JMenu("Zahtevi rezervacije");
+        JMenu guestsMenu = new JMenu("Gosti");
+        menuBar.add(guestsMenu);
+        JMenuItem showAllGuests = new JMenuItem("Prikaz svih gostiju");
+        guestsMenu.add(showAllGuests);
+        JMenuItem addNewGuest = new JMenuItem("Dodaj novog gosta:");
+        guestsMenu.add(addNewGuest);
+        JMenuItem checkInGuest = new JMenuItem("Check-in gosta");
+        guestsMenu.add(checkInGuest);
+        JMenuItem checkOutGuest = new JMenuItem("Check-out gosta");
+        guestsMenu.add(checkOutGuest);
+        
+        
+        JMenu reservationRequestMenu = new JMenu("Rezervacije");
         menuBar.add(reservationRequestMenu);
         JMenuItem showreservationRequests = new JMenuItem("Pregledaj sve zahteve rezervacija");
         reservationRequestMenu.add(showreservationRequests);
+        JMenuItem showreservations = new JMenuItem("Pregledaj sve rezervacije");
+        reservationRequestMenu.add(showreservations);
+        JMenuItem processReservationRequest  = new JMenuItem("Potvrdi/Odbij rezervaciju");
+        reservationRequestMenu.add(processReservationRequest);
+        JMenuItem addReservation  = new JMenuItem("Dodaj rezervaciju");
+        reservationRequestMenu.add(addReservation);
+        JMenuItem cancelReservation  = new JMenuItem("Otkazi rezervaciju");
+        reservationRequestMenu.add(cancelReservation);
+        
+        
+        JMenu roomMenu = new JMenu("Sobe");
+        menuBar.add(roomMenu);
+        JMenuItem showVacantRoom = new JMenuItem("Prikaz slobodnih soba");
+        roomMenu.add(showVacantRoom);
+        JMenuItem showOccupiedRoom = new JMenuItem("Prikaz zauzetih soba");
+        roomMenu.add(showOccupiedRoom);
+        JMenuItem showCleaningRoom = new JMenuItem("Prikaz soba na spermanju");
+        roomMenu.add(showCleaningRoom);
         
         showreservationRequests.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             	showUserReservationRequests();
             }
         });
-		
 	}
-
 
 	protected void showUserReservationRequests() {
 	    List<ReservationRequest> reservationRequests = hotelManager.getReservationRequests().getReservationRequests();

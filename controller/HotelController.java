@@ -1,8 +1,11 @@
 package controller;
 
+import java.time.LocalDate;
+
 import entity.AdditionalService;
 import entity.Guest;
 import entity.Housekeeper;
+import entity.PriceList;
 import entity.Receptionist;
 import entity.ReservationRequest;
 import entity.Room;
@@ -85,6 +88,15 @@ public class HotelController {
 		}
 		else {
 			System.out.println("Greška prilikom dodavanja podataka o zahtevu rezervacije u CSV fajl.");
+		}	
+	}
+	
+	public void addPriceList(PriceList priceList) {
+		if(priceListController.writePiceListToCSV(priceList)) {
+			System.out.println("Podaci o cenovniku su uspešno dodati u CSV fajl.");
+		}
+		else {
+			System.out.println("Greška prilikom dodavanja podataka o cenovniku rezervacije u CSV fajl.");
 		}	
 	}
 
@@ -181,11 +193,22 @@ public class HotelController {
 		}			
 	}
 
-	
+	public void deletePriceList(PriceList priceList) {
+		if(priceListController.deletePriceListFromCSV(priceList)) {
+			 System.out.println("Podaci o cenovniku su uspešno obrisani iz CSV fajla.");
+		}
+		else {
+			System.out.println("Greška prilikom brisanja podataka o cenovniku iz CSV fajla.");
+		}	
+		
+	}
 
-	
-
-	
-
-	
+	public void updatePriceList(LocalDate startDate, LocalDate endDate, PriceList priceList) {
+		if(priceListController.updatePriceListFromCSV(startDate,endDate, priceList)) {
+			 System.out.println("Podaci o cenovniku su uspešno ažurirani iz CSV fajla.");
+		}
+		else {
+			System.out.println("Greška prilikom ažurirani podataka o cenovniku iz CSV fajla.");
+		}	
+	}
 }

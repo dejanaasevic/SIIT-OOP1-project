@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
@@ -34,6 +35,7 @@ import entity.PriceList;
 import entity.QualificationLevel;
 import entity.Receptionist;
 import entity.Reservation;
+import entity.ReservationRequest;
 import entity.Room;
 import entity.RoomStatus;
 import entity.RoomType;
@@ -126,14 +128,14 @@ public class AdministratorFrame extends JFrame {
        
         JMenu priceListMenu = new JMenu("Cenovnik");
         menuBar.add(priceListMenu);
-        JMenuItem showPriceLists = new JMenuItem("Pregledaj trenutni cenovnik");
+        JMenuItem showPriceLists = new JMenuItem("Prikaz svih cenovnika");
         priceListMenu.add(showPriceLists);
-        JMenuItem addPriceListItem = new JMenuItem("Dodaj novu stavku u cenovnik");
-        priceListMenu.add(addPriceListItem);
-        JMenuItem updatePriceListItem = new JMenuItem("Izmeni informacije o stavci u cenovniku");
-        priceListMenu.add(updatePriceListItem);
-        JMenuItem deletePriceListItem = new JMenuItem("Obriši stavku iz cenovnika");
-        priceListMenu.add(deletePriceListItem);
+        JMenuItem addPriceList= new JMenuItem("Dodaj novi cenovnik");
+        priceListMenu.add(addPriceList);
+        JMenuItem updatePriceList = new JMenuItem("Izmeni informacije o cenovniku");
+        priceListMenu.add(updatePriceList);
+        JMenuItem deletePriceList = new JMenuItem("Obriši cenovnik");
+        priceListMenu.add(deletePriceList);
 
         JMenu reportMenu = new JMenu("Izveštaji");
         menuBar.add(reportMenu);
@@ -252,11 +254,33 @@ public class AdministratorFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
             	showPriceLists();
              }
+         });
+        
+        showPriceLists.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	showPriceLists();
+             }
          }); 
+        addPriceList.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		addPriceList();
+             }
+        });
+        
+        updatePriceList.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		updatePriceList();
+             }
+        });
+        
+        deletePriceList.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		deletePriceList();
+             }
+        });
     }
   
-    
-
+  
 	private void displayAllEmployees() {
         Map<String, Employee> employeeMap = hotelManager.getEmployees().get();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
@@ -776,7 +800,133 @@ public class AdministratorFrame extends JFrame {
 	    contentPane.revalidate();
 	    contentPane.repaint();
 	}
+
+
+	protected void addPriceList() {
+		try {
+			String startDateStr = JOptionPane.showInputDialog("Unesite datum početka važenja cenovnika (dd.MM.yyyy.):");
+	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja važenja cenovnika (dd.MM.yyyy.):");
+	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        PriceList priceList = new PriceList(startDate, endDate);
+
+	        String[] roomTypes = {"SINGLE", "DOUBLE", "TWIN", "TRIPLE"};
+	        for (String type : roomTypes) {
+	        	String roomPriceStr = JOptionPane.showInputDialog("Unesite cenu za tip sobe " + type + ":");
+	            double roomPrice = Double.parseDouble(roomPriceStr);
+	            RoomType roomType = RoomType.valueOf(type);
+	            priceList.addRoomPrice(roomType, roomPrice);
+	        }
+
+	        Map<String,AdditionalService> allServices = hotelManager.getAdditionalServices().get();
+	        for (AdditionalService service : allServices.values()) {
+	        	String servicePriceStr = JOptionPane.showInputDialog("Unesite cenu za uslugu " + service.getName() + ":");
+	            double servicePrice = Double.parseDouble(servicePriceStr);
+	            priceList.addAdditionalServicePrice(service, servicePrice);
+	        }
+
+	        hotelManager.addPriceList(priceList);
+	        hotelController.addPriceList(priceList);
+	        JOptionPane.showMessageDialog(null, "Cenovnik je uspešno dodat.");
+	        } catch (Exception e) {
+	          JOptionPane.showMessageDialog(null, "Došlo je do greške prilikom kreiranja cenovnika. Proverite unete podatke i pokušajte ponovo.");
+	          e.printStackTrace();
+	        }
+			showPriceLists();
+	    }		
+
+	
+	protected void deletePriceList() {
+		String startDateStr = JOptionPane.showInputDialog("Unesite datum početka važenja cenovnika (dd.MM.yyyy.):");
+		LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+		String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja važenja cenovnika (dd.MM.yyyy.):");
+		LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String startDateFormatted = startDate.format(formatter);
+        String endDateFormatted = endDate.format(formatter);
+		String id = startDateFormatted + "_" + endDateFormatted;
+		PriceList priceList = hotelManager.getPriceLists().FindById(id);
+
+		if (priceList != null) {
+		    hotelController.deletePriceList(priceList);
+		    hotelManager.deletePriceList(priceList);
+		    JOptionPane.showMessageDialog(null, "Cenovnik je uspešno obrisan");
+		    showAdditionalServices(); 
+		} else {
+		    JOptionPane.showMessageDialog(null, "Nije pronađen cenovnik sa unetim datumima.");
+		}
+		showPriceLists();
+	}
+
+	protected void updatePriceList() {
+	    try {
+	        String startDateStr = JOptionPane.showInputDialog("Unesite datum početka važenja cenovnika koji želite da promenite (dd.MM.yyyy.):");
+	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja važenja cenovnika koji želite da promenite (dd.MM.yyyy.):");
+	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        
+	        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+	        String startDateFormatted = startDate.format(dateFormatter);
+	        String endDateFormatted = endDate.format(dateFormatter);
+	        String id = startDateFormatted + "_" + endDateFormatted;
+	        
+	        PriceList priceList = hotelManager.getPriceLists().FindById(id);
+	        if (priceList != null) {
+	            JOptionPane.showMessageDialog(null, "Trenutne informacije o cenovniku:\n" + priceList.toString());
+	            
+	            String newStartDateStr = JOptionPane.showInputDialog("Unesite novi datum početka važenja (ostavite prazno ako ne želite da menjate):");
+	            if (!newStartDateStr.isEmpty()) {
+	                LocalDate newStartDate = LocalDate.parse(newStartDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	                priceList.setStartDate(newStartDate);
+	            }
+
+	            String newEndDateStr = JOptionPane.showInputDialog("Unesite novi datum kraja važenja (ostavite prazno ako ne želite da menjate):");
+	            if (!newEndDateStr.isEmpty()) {
+	                LocalDate newEndDate = LocalDate.parse(newEndDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	                priceList.setEndDate(newEndDate);
+	            }
+
+	            String[] roomTypes = {"SINGLE", "DOUBLE", "TWIN", "TRIPLE"};
+	            for (String type : roomTypes) {
+	                String newPriceStr = JOptionPane.showInputDialog("Unesite novu cenu za tip sobe " + type + " (ostavite prazno ako ne želite da menjate):");
+	                if (!newPriceStr.isEmpty()) {
+	                    double newPrice = Double.parseDouble(newPriceStr);
+	                    RoomType roomType = RoomType.valueOf(type);
+	                    priceList.setRoomPrice(roomType, newPrice);
+	                }
+	            }
+	            
+	            int updateMoreServices = JOptionPane.YES_OPTION;
+	            while (updateMoreServices == JOptionPane.YES_OPTION) {
+	                String serviceName = JOptionPane.showInputDialog("Unesite naziv usluge koju želite da ažurirate (ostavite prazno ako ne želite da menjate):");
+	                if (!serviceName.isEmpty()) {
+	                    String newServicePriceStr = JOptionPane.showInputDialog("Unesite novu cenu usluge " + serviceName + " (ostavite prazno ako ne želite da menjate):");
+	                    if (!newServicePriceStr.isEmpty()) {
+	                        double newServicePrice = Double.parseDouble(newServicePriceStr);
+	                        AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName);
+	                        if (service != null) {
+	                            priceList.setAdditionalServicePrice(service, newServicePrice);
+	                        } else {
+	                            JOptionPane.showMessageDialog(null, "Dodatna usluga sa navedenim nazivom nije pronađena.");
+	                        }
+	                    }
+	                }
+	                updateMoreServices = JOptionPane.showConfirmDialog(null, "Želite li da ažurirate još neku dodatnu uslugu?", "Ažuriranje dodatnih usluga", JOptionPane.YES_NO_OPTION);
+	            }
+
+	            hotelController.updatePriceList(startDate,endDate,priceList);
+	            JOptionPane.showMessageDialog(null, "Cenovnik je uspešno ažuriran.");
+	        } else {
+	            JOptionPane.showMessageDialog(null, "Nije pronađen cenovnik sa unetim datumima.");
+	        }
+	    } catch (Exception e) {
+	        JOptionPane.showMessageDialog(null, "Došlo je do greške prilikom ažuriranja cenovnika. Proverite unete podatke i pokušajte ponovo.");
+	        e.printStackTrace();
+	    }
+	    showPriceLists();
+	}	
 }
+
     
 	/*
 	protected void updateReservation() {

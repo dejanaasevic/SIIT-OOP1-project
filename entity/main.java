@@ -7,7 +7,7 @@ import manager.HotelManager;
 public class main {
 
 	 public static void main(String[] args) {
-		HotelManager hotelManager = new HotelManager();
+	/*	HotelManager hotelManager = new HotelManager();
 		
 		// Kreirati jednog administratora sistema (Pera Perić).
 		Administrator administrator1 = new Administrator("Pera", "Perić", Gender.MALE,
@@ -138,5 +138,7 @@ public class main {
 		//Prikazati sve rezervacije Milice Milić sa aktuelnim statusom.
 		hotelManager.displayGuestReservations(guest1);
 	 
+	 }
+	 */
 	 }
 }
