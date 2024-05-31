@@ -7,6 +7,7 @@ import entity.Guest;
 import entity.Housekeeper;
 import entity.PriceList;
 import entity.Receptionist;
+import entity.Reservation;
 import entity.ReservationRequest;
 import entity.Room;
 import manager.HotelManager;
@@ -19,6 +20,7 @@ public class HotelController {
 	private AdditionalServiceController additionalServiceController;
 	private PriceListController priceListController;
 	private ReservationRequestController reservationRequestController;
+	private ReservationController reservationController;
 
 	public HotelController(HotelManager hotelManager) {
         this.hotelManager = hotelManager;
@@ -27,6 +29,7 @@ public class HotelController {
         this.additionalServiceController = new AdditionalServiceController(hotelManager);
         this.priceListController = new PriceListController(hotelManager);
         this.reservationRequestController = new ReservationRequestController(hotelManager);
+        this.reservationController = new ReservationController(hotelManager);
         initialize();
     }
 
@@ -36,6 +39,7 @@ public class HotelController {
 		additionalServiceController.readAdditionalServiceDataFromCSV();
 		priceListController.readPriceListDataFromCSV();
 		reservationRequestController.readReservationRequestsDataFromCSV();
+		reservationController.readReservationDataFromCSV();
 	}
 	
 	public void addHousekeeper(Housekeeper housekeeper) {
@@ -99,6 +103,15 @@ public class HotelController {
 			System.out.println("Greška prilikom dodavanja podataka o cenovniku rezervacije u CSV fajl.");
 		}	
 	}
+	public void addReservation(Reservation reservation) {
+		if(reservationController.writePiceListToCSV(reservation)) {
+			System.out.println("Podaci o rezervaciji su uspešno dodati u CSV fajl.");
+		}
+		else {
+			System.out.println("Greška prilikom dodavanja podataka o rezervaciji rezervacije u CSV fajl.");
+		}	
+		
+	}
 
 	public void updateReceptionist(Receptionist receptionist) {
 		if(userController.updateEmployeeInCSV(receptionist)) {
@@ -143,9 +156,28 @@ public class HotelController {
 		}
 		else {
 			System.out.println("Greška prilikom ažuriranja podataka o dodatnoj usluzi u CSV fajlu.");
+		}	
+	}
+	
+	public void updatePriceList(LocalDate startDate, LocalDate endDate, PriceList priceList) {
+		if(priceListController.updatePriceListFromCSV(startDate,endDate, priceList)) {
+			 System.out.println("Podaci o cenovniku su uspešno ažurirani iz CSV fajla.");
 		}
+		else {
+			System.out.println("Greška prilikom ažurirani podataka o cenovniku iz CSV fajla.");
+		}	
+	}
+	
+	public void updateReservation(LocalDate startDate, LocalDate endDate,String roomNumber, Reservation reservation) {
+		if(reservationController.updateReservationInCSV(startDate,endDate,roomNumber, reservation)) {
+			 System.out.println("Podaci o cenovniku su uspešno ažurirani iz CSV fajla.");
+		}
+		else {
+			System.out.println("Greška prilikom ažurirani podataka o cenovniku iz CSV fajla.");
+		}	
 		
 	}
+	
 
 	
 	public void deleteReceptionist(Receptionist receptionist) {
@@ -202,13 +234,22 @@ public class HotelController {
 		}	
 		
 	}
-
-	public void updatePriceList(LocalDate startDate, LocalDate endDate, PriceList priceList) {
-		if(priceListController.updatePriceListFromCSV(startDate,endDate, priceList)) {
-			 System.out.println("Podaci o cenovniku su uspešno ažurirani iz CSV fajla.");
+	public void deleteReservation(Reservation reservation) {
+		if(reservationController.deleteReservationFromCSV(reservation)) {
+			 System.out.println("Podaci o rezervaciji su uspešno obrisani iz CSV fajla.");
 		}
 		else {
-			System.out.println("Greška prilikom ažurirani podataka o cenovniku iz CSV fajla.");
+			System.out.println("Greška prilikom brisanja podataka o rezervaciji iz CSV fajla.");
 		}	
+		
 	}
+
+
+	
+
+
+
+	
+
+	
 }

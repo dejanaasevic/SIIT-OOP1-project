@@ -2,4 +2,6 @@ Administrator,Pera,Perić,MALE,1989-12-13,"381640001111",Zlatne grede 10 Novi Sa
 Receptionist,Mika,Mikić,MALE,1990-05-15,"+381641010220",Njegoševa 12 Novi Sad,mika_mikic,mikamikic90,10,2500,ADVANCED
 Housekeeper,Jana,Janić,FEMALE,1995-08-25,"+381641010600",Branka Radičevića 15 Novi Sad,jana_janic,janajanic95,1,1000,BEGINNER
 Guest,Milica,Milić,FEMALE,1990-07-10,"+3816410003049",Kneza Mihaila 1 Beograd,milica.milic@gmail.com,123456789,,,
-Guest,Ana,Anić,FEMALE,1995-04-20,"+381641000112",Terazije 10 Beograd,admin,admin,,,
+Guest,Ana,Anić,FEMALE,1995-04-20,"+381641000112",Terazije 10 Beograd,ana.anic@gmail.com,20049520,,,
+Receptionist,Anastasija,Radić,FEMALE,2000-11-20,"+3810064765",Zmaj Jovina 11 Novi Sad,anastastijaradic,anastasija00,5,1200.0,ADVANCED
+Housekeeper,Marko,Mandic,MALE,1999-12-11,"+3816578230",Dobrovoljacka 3 Sirig,marko_mandic,marko123,3,1300.0,BEGINNER

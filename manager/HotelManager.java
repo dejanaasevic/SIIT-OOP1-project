@@ -375,11 +375,14 @@ public class HotelManager {
 	}
 
 	public void deletePriceList(PriceList priceList) {
-		if (priceLists.remove(priceList.generateID())) {
+		if (priceLists.remove(priceList.getId())) { // ovde je bilo generateID() AKO NE RADI !!!!
 	    	System.out.println("Podaci o cenovniku su uspešno obrisani.");
 	    }
 	}
 
-
-	
+	public void deleteReservation(Reservation reservation) {
+		if (reservations.remove(reservation.getID())) {
+	    	System.out.println("Podaci o cenovniku su uspešno obrisani.");
+	    }
+	}
 }

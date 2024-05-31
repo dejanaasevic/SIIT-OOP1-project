@@ -62,6 +62,10 @@ public class Reservation {
 		additionalServices.remove(service);
 	}
 	
+	public List<AdditionalService> getAdditionalService() {
+		return additionalServices;
+	}
+	
 	public void setRoomType(RoomType roomType) {
 		this.roomType = roomType;
 	}
@@ -146,5 +150,45 @@ public class Reservation {
 	            "dodatne usluge: " + additionalServicesString + "\n" +
 	            "ID rezervacije: " + id + "\n" +
 	            "ukupna cena: " + totalPrice + "\n";
-	}	
+	}
+
+	public String toCSVString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String startDateStr = startDate.format(formatter);
+        String endDateStr = endDate.format(formatter);
+        
+        StringBuilder servicesString = new StringBuilder();
+        for (int i = 0; i < additionalServices.size(); i++) {
+            servicesString.append(additionalServices.get(i).getName());
+            if (i < additionalServices.size() - 1) {
+                servicesString.append(";");
+            }
+        }
+
+        return String.join(",", 
+            roomType.toString(), 
+            String.valueOf(numberOfGuests), 
+            startDateStr, 
+            endDateStr, 
+            reservationStatus.toString(), 
+            guest.getUsername(), 
+            servicesString.toString(), 
+            room.getRoomNumber()
+        );
+    }
+	
+	public void updateAdditionalServicePrice(AdditionalService service, double newServicePrice) {
+	    if (service != null) {
+	        for (AdditionalService additionalService : additionalServices) {
+	            if (additionalService.getName().equals(service.getName())) {
+	                additionalService.setPrice(newServicePrice); 
+	                System.out.println("Cena dodatne usluge " + service.getName() + " je uspešno ažurirana.");
+	                return; 
+	            }
+	        }
+	        System.out.println("Dodatna usluga " + service.getName() + " nije pronađena.");
+	    } else {
+	        System.out.println("Dodatna usluga nije validna.");
+	    }
+	}
 }

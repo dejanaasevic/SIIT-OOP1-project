@@ -36,6 +36,7 @@ import entity.QualificationLevel;
 import entity.Receptionist;
 import entity.Reservation;
 import entity.ReservationRequest;
+import entity.ReservationStatus;
 import entity.Room;
 import entity.RoomStatus;
 import entity.RoomType;
@@ -100,9 +101,11 @@ public class AdministratorFrame extends JFrame {
         reservationMenu.add(showReservations);
         JMenuItem addReservation = new JMenuItem("Kreiraj novu rezervaciju");
         reservationMenu.add(addReservation);
+        JMenuItem updateReservation = new JMenuItem("Izmeni rezervacije");
+        reservationMenu.add(updateReservation);
         JMenuItem deleteReservation = new JMenuItem("Brisanje rezervacije");
         reservationMenu.add(deleteReservation);
-        JMenuItem updateReservation = new JMenuItem("Izmeni rezervacije");
+        
 
         JMenu roomMenu = new JMenu("Sobe");
         menuBar.add(roomMenu);
@@ -278,8 +281,30 @@ public class AdministratorFrame extends JFrame {
         		deletePriceList();
              }
         });
+        
+        showReservations.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	showReservations();
+            }
+        }); 
+        
+        addReservation.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	addReservation();
+            }
+        });
+        updateReservation.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	updateReservation();
+             }
+         });
+        
+        deleteReservation.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	deleteReservation();
+             }
+         });
     }
-  
   
 	private void displayAllEmployees() {
         Map<String, Employee> employeeMap = hotelManager.getEmployees().get();
@@ -925,55 +950,42 @@ public class AdministratorFrame extends JFrame {
 	    }
 	    showPriceLists();
 	}	
-}
-
-    
-	/*
-	protected void updateReservation() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	protected void deleteReservation() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	protected void addReservation() {
-		// TODO Auto-generated method stub
-		
-	}
-
+	
 	protected void showReservations() {
 		Map<String, Reservation> reservationMap = hotelManager.getReservations().get();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
         String[] columnNames = {
-        		"ID", "Tip sobe", "Broj Gostiju", "Datum početka", "Datum kraja",
-        		"Status", "Gost", "Dodatne usluge", "Iskustvo",
-        		"Plata", "Nivo kvalifikacije", "Cena"
+        		"Datum početka", "Datum kraja", "Gost", "Broj sobe", "Tip sobe", "Broj Gostiju", 
+        		"Status","Dodatne usluge", "Cena"
         };
+        
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; 
             }
         };
-        csvReader.readReservationDataFromCSV("src/data/reservation.csv");
+        
+        
         for (Reservation reservation : reservationMap.values()) {
-        	String additionalServicesString = "";
-    	    for (AdditionalService service : reservation.additionalServices) {
-    	        additionalServicesString += service.getName() + ", ";
-    	    }
-            Object[] row = {
-            	
-                reservation.getID(),
-                reservation.getRoomType(),
-                reservation.getNumberOfGuests(),
-                reservation	.getStartDate().format(formatter),
-                reservation	.getEndDate().format(formatter),
-                reservation.getReservationStatus(),
+        	List<AdditionalService> additionalService = reservation.getAdditionalService();
+        	StringBuilder servicesString = new StringBuilder();
+        	for (int i = 0; i < additionalService.size(); i++) {
+        	    servicesString.append(additionalService.get(i).getName());
+        	    if (i < additionalService.size()) {
+        	        servicesString.append(";");
+        	    }
+        	}
+        	
+        	Object[] row = {
+        		reservation.getStartDate().format(formatter),
+                reservation.getEndDate().format(formatter),
                 reservation.getGuest().getUsername(),
-                additionalServicesString,
+                reservation.getRoom().getRoomNumber(),
+        		reservation.getRoomType(),
+                reservation.getNumberOfGuests(),
+                reservation.getReservationStatus(),
+                servicesString,
                 reservation.getTotalPrice()
             };
             tableModel.addRow(row);
@@ -986,6 +998,132 @@ public class AdministratorFrame extends JFrame {
         contentPane.add(scrollPane, BorderLayout.CENTER);
         contentPane.revalidate();
         contentPane.repaint();
+	}
+
+	protected void deleteReservation() {
+		 String startDateStr = JOptionPane.showInputDialog("Unesite datum početka rezervacije(dd.MM.yyyy.):");
+	     LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	     String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja rezervacije(dd.MM.yyyy.):");
+	     LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	     String roomStr = JOptionPane.showInputDialog("Unesite broj sobe:");
+	     String id = startDate.toString() + "_" + endDate.toString() + "_" + roomStr;
+	     System.out.println(id);
+	     Reservation reservation = hotelManager.getReservations().FindById(id);
+	     if (reservation != null) {
+	    	 hotelController.deleteReservation(reservation);
+			 hotelManager.deleteReservation(reservation);
+			 JOptionPane.showMessageDialog(null, "Rezervacija je uspešno obrisana"); 
+	     } else {
+	            JOptionPane.showMessageDialog(null, "Nije pronađena ni jedna razervacija sa unetim podacima.");
+	     }
+	     showReservations();
+	}
+
+	protected void updateReservation() {
+	    try {
+	        String startDateStr = JOptionPane.showInputDialog("Unesite datum početka rezervacije (dd.MM.yyyy.):");
+	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja rezervacije (dd.MM.yyyy.):");
+	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        String roomStr = JOptionPane.showInputDialog("Unesite broj sobe:");
+	        
+	        String id = startDate.toString() + "_" + endDate.toString() + "_" + roomStr;
+	        Reservation reservation = hotelManager.getReservations().FindById(id);
+	        System.out.println(id);
+	        if (reservation != null) {
+	            JOptionPane.showMessageDialog(null, "Trenutne informacije o rezervaciji:\n" + reservation.toString());
+
+	            String newStartDateStr = JOptionPane.showInputDialog("Unesite novi datum početka rezervacije (ostavite prazno ako ne želite da menjate):");
+	            if (!newStartDateStr.isEmpty()) {
+	                LocalDate newStartDate = LocalDate.parse(newStartDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	                reservation.setStartDate(newStartDate);
+	            }
+
+	            String newEndDateStr = JOptionPane.showInputDialog("Unesite novi datum kraja rezervacije (ostavite prazno ako ne želite da menjate):");
+	            if (!newEndDateStr.isEmpty()) {
+	                LocalDate newEndDate = LocalDate.parse(newEndDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	                reservation.setEndDate(newEndDate);
+	            }
+
+	            String newNumberOfGuestsStr = JOptionPane.showInputDialog("Unesite novi broj gostiju (ostavite prazno ako ne želite da menjate):");
+	            if (!newNumberOfGuestsStr.isEmpty()) {
+	                int newNumberOfGuests = Integer.parseInt(newNumberOfGuestsStr);
+	                reservation.setNumberOfGuests(newNumberOfGuests);
+	            }
+
+	            int modifyServices = JOptionPane.YES_OPTION;
+	            while (modifyServices == JOptionPane.YES_OPTION) {
+	                String serviceName = JOptionPane.showInputDialog("Unesite naziv dodatne usluge koju želite da uklonite (ostavite prazno ako ne želite ništa da uklonite):");
+	                if (!serviceName.isEmpty()) {
+	                    AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName.trim());
+	                    if (service != null) {
+	                        reservation.removeAdditionalService(service);
+	                    } else {
+	                        JOptionPane.showMessageDialog(null, "Dodatna usluga sa navedenim nazivom nije pronađena.");
+	                    }
+	                }
+	                modifyServices = JOptionPane.showConfirmDialog(null, "Želite li da uklonite još neku dodatnu uslugu?", "Uklanjanje dodatnih usluga", JOptionPane.YES_NO_OPTION);
+	            }
+	            hotelController.updateReservation(startDate, endDate, roomStr, reservation);
+	        }
+	    } catch (Exception e) {
+	        JOptionPane.showMessageDialog(null, "Došlo je do greške prilikom ažuriranja rezervacije. Proverite unete podatke i pokušajte ponovo.");
+	        e.printStackTrace();
+	    }
+	    showReservations();
+	}
+
+	protected void addReservation() {
+	    try {
+	        String startDateStr = JOptionPane.showInputDialog("Unesite datum početka rezervacije (dd.MM.yyyy.):");
+	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja rezervacije (dd.MM.yyyy.):");
+	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+
+	        String guestUsername = JOptionPane.showInputDialog("Unesite korisničko ime gosta:");
+	        Guest guest = hotelManager.getGuests().FindById(guestUsername);
+	        if (guest == null) {
+	            JOptionPane.showMessageDialog(null, "Gost sa unetim korisničkim imenom nije pronađen.");
+	            return;
+	        }
+	        String roomStr = JOptionPane.showInputDialog("Unesite broj sobe:");
+	        Room room = hotelManager.getRooms().FindById(roomStr);
+	        if (room == null) {
+	            JOptionPane.showMessageDialog(null, "Soba sa unetim brojem nije pronađena.");
+	            return;
+	        }
+	        String roomTypeStr = JOptionPane.showInputDialog("Unesite tip sobe (SINGLE, DOUBLE, TWIN, TRIPLE):");
+	        RoomType roomType = RoomType.valueOf(roomTypeStr.toUpperCase());
+
+	        String numberOfGuestsStr = JOptionPane.showInputDialog("Unesite broj gostiju:");
+	        int numberOfGuests = Integer.parseInt(numberOfGuestsStr);
+
+	        ReservationRequest reservationRequest = new ReservationRequest(roomType, numberOfGuests, startDate, endDate, guest);
+
+	        int addMoreServices = JOptionPane.YES_OPTION;
+	        while (addMoreServices == JOptionPane.YES_OPTION) {
+	            String serviceName = JOptionPane.showInputDialog("Unesite naziv dodatne usluge (ostavite prazno ako ne želite da dodate):");
+	            if (!serviceName.isEmpty()) {
+	                AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName.trim());
+	                if (service != null) {
+	                    reservationRequest.addAdditionalService(service);
+	                } else {
+	                    JOptionPane.showMessageDialog(null, "Dodatna usluga sa navedenim nazivom nije pronađena.");
+	                }
+	            }
+	            addMoreServices = JOptionPane.showConfirmDialog(null, "Želite li da dodate još neku dodatnu uslugu?", "Dodavanje dodatnih usluga", JOptionPane.YES_NO_OPTION);
+	        }
+
+	        Reservation reservation = new Reservation(reservationRequest, room);
+	        hotelManager.addReservation(reservation);
+	        hotelController.addReservation(reservation);
+
+	        JOptionPane.showMessageDialog(null, "Rezervacija je uspešno dodata.");
+	        showReservations();
+	    } catch (Exception e) {
+	        JOptionPane.showMessageDialog(null, "Došlo je do greške prilikom dodavanja rezervacije. Proverite unete podatke i pokušajte ponovo.");
+	        e.printStackTrace();
+	    }
+	    showReservations();
+	}
 }
-	
-*/
