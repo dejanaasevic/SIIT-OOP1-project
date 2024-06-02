@@ -616,7 +616,7 @@ public class ReceptionistFrame extends JFrame {
 	            JOptionPane.showMessageDialog(null, "Korisničko ime ne može biti prazno.", "Greška", JOptionPane.ERROR_MESSAGE);
 	            return;
 	        }
-	        
+
 	        Guest guest = hotelManager.getGuests().FindById(username);
 
 	        if (guest == null) {
@@ -639,7 +639,7 @@ public class ReceptionistFrame extends JFrame {
 	                hotelManager.addGuest(newGuest);
 	                hotelController.addGuest(newGuest);
 	                JOptionPane.showMessageDialog(null, "Gost uspešno dodat!", "Uspeh", JOptionPane.INFORMATION_MESSAGE);
-	                guest = newGuest; 
+	                guest = newGuest;
 	            }
 	        }
 
@@ -662,7 +662,7 @@ public class ReceptionistFrame extends JFrame {
 	                        }
 	                    }
 	                    if (newReservation != null) {
-	                    	newReservation.setReservationStatus(ReservationStatus.ACTIVE);
+	                        newReservation.setReservationStatus(ReservationStatus.ACTIVE);
 	                        hotelController.updateReservation(newReservation.getStartDate(), newReservation.getEndDate(), newReservation.getRoom().getRoomNumber(), newReservation);
 	                        Room room = newReservation.getRoom();
 	                        if (room != null) {
@@ -718,12 +718,29 @@ public class ReceptionistFrame extends JFrame {
 	                            JOptionPane.showMessageDialog(null, "Soba se čisti.", "Greška", JOptionPane.ERROR_MESSAGE);
 	                        } else if (room.getRoomStatus() == RoomStatus.VACANT) {
 	                            reservation.setReservationStatus(ReservationStatus.ACTIVE);
-		                        hotelController.updateReservation(reservation.getStartDate(), reservation.getEndDate(), reservation.getRoom().getRoomNumber(), reservation);
-	                        	room.setRoomStatus(RoomStatus.OCCUPIED);
+	                            room.setRoomStatus(RoomStatus.OCCUPIED);
 	                            hotelController.updateRoom(room);
+
+	                            int addMoreServices = JOptionPane.YES_OPTION;
+	                            while (addMoreServices == JOptionPane.YES_OPTION) {
+	                                String serviceName = JOptionPane.showInputDialog("Unesite naziv dodatne usluge (ostavite prazno ako ne želite da dodate):");
+	                                if (serviceName != null && !serviceName.trim().isEmpty()) {
+	                                    AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName.trim());
+	                                    if (service != null) {
+	                                        reservation.addAdditionalService(service);
+	                                    } else {
+	                                        JOptionPane.showMessageDialog(null, "Dodatna usluga sa navedenim nazivom nije pronađena.");
+	                                    }
+	                                }
+	                                addMoreServices = JOptionPane.showConfirmDialog(null, "Želite li da dodate još neku dodatnu uslugu?", "Dodavanje dodatnih usluga", JOptionPane.YES_NO_OPTION);
+	                            }
+
+	                            double price = calculateReservationPrice(reservation);
+	                            reservation.setPrice(price);
+	                            hotelController.updateReservation(reservation.getStartDate(), reservation.getEndDate(), reservation.getRoom().getRoomNumber(), reservation);
 	                            JOptionPane.showMessageDialog(null, "Gost je uspešno prijavljen za rezervaciju: " + selectedReservationStr, "Uspeh", JOptionPane.INFORMATION_MESSAGE);
 	                        }
-	                    }        
+	                    }
 	                }
 	            }
 	        }
@@ -732,6 +749,7 @@ public class ReceptionistFrame extends JFrame {
 	        e.printStackTrace();
 	    }
 	}
+
 	
 	protected void checkOutGuest() {
 	    String username = JOptionPane.showInputDialog("Unesite korisničko ime gosta (e-mail) za odjavu:");

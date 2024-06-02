@@ -304,8 +304,27 @@ public class AdministratorFrame extends JFrame {
             	deleteReservation();
              }
          });
+        
+        incomeExpenses.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	incomeExpenses();
+             }
+         });
     }
   
+	protected void incomeExpenses() {
+		String startDateStr = JOptionPane.showInputDialog("Unesite datum početka analize (dd.MM.yyyy.):");
+        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja analize (dd.MM.yyyy.):");
+        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+        
+        double income = 0;
+        double outcome = 0;
+        
+        // prvo moraju i zahtevi rezervacije da se računaju očigledno
+		
+	}
+
 	private void displayAllEmployees() {
         Map<String, Employee> employeeMap = hotelManager.getEmployees().get();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");

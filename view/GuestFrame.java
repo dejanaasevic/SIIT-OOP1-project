@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -26,6 +27,7 @@ import entity.Gender;
 import entity.Guest;
 import entity.Reservation;
 import entity.ReservationRequest;
+import entity.ReservationStatus;
 import entity.RoomType;
 import manager.HotelManager;
 
@@ -64,10 +66,10 @@ public class GuestFrame extends JFrame {
 	    reservationRequestMenu.add(showreservationRequests);
 	    JMenuItem addreservationRequests = new JMenuItem("Dodaj novi zahtev rezervacije"); 
 	    reservationRequestMenu.add(addreservationRequests);
-	    JMenuItem updatereservationRequests = new JMenuItem("Izmeni zahtev rezervacije");
-	    reservationRequestMenu.add(updatereservationRequests);
-	    JMenuItem deletereservationRequests = new JMenuItem("Obriši zahtev rezervacije");
-	    reservationRequestMenu.add(deletereservationRequests);
+	    //JMenuItem updatereservationRequests = new JMenuItem("Izmeni zahtev rezervacije");
+	    //reservationRequestMenu.add(updatereservationRequests);
+	    //JMenuItem deletereservationRequests = new JMenuItem("Obriši zahtev rezervacije");
+	    //reservationRequestMenu.add(deletereservationRequests);
 
 	    JMenu reservationMenu = new JMenu("Rezervacije");
 	    menuBar.add(reservationMenu);
@@ -93,8 +95,16 @@ public class GuestFrame extends JFrame {
 	            showUserReservations();
 	        }
 	    });
+	    
+	    cancelReservation.addActionListener(new ActionListener() {
+	        public void actionPerformed(ActionEvent e) {
+	        	cancelReservation();
+	        }
+	    });
 	}
 
+
+	
 
 	protected void showUserReservationRequests() {
 	    List<ReservationRequest> reservationRequests = hotelManager.getReservationRequests().getReservationRequests();
@@ -269,5 +279,119 @@ public class GuestFrame extends JFrame {
 	    contentPane.add(scrollPane, BorderLayout.CENTER);
 	    contentPane.revalidate();
 	    contentPane.repaint();
+	}
+
+	protected void cancelReservation() {
+	    Map<String, Reservation> reservationMap = hotelManager.getReservations().get();
+	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
+	    
+	    String[] columnNames = {
+	        "Datum početka", "Datum kraja", "Broj sobe", "Tip sobe", "Broj Gostiju", 
+	        "Status", "Dodatne usluge", "Cena"
+	    };
+	    
+	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+	        @Override
+	        public boolean isCellEditable(int row, int column) {
+	            return false; 
+	        }
+	    };
+
+	    for (Reservation reservation : reservationMap.values()) {
+	        if (reservation.getGuest().getUsername().equals(this.username)) {
+	            List<AdditionalService> additionalServices = reservation.getAdditionalService();
+	            StringBuilder servicesString = new StringBuilder();
+	            
+	            for (int i = 0; i < additionalServices.size(); i++) {
+	                servicesString.append(additionalServices.get(i).getName());
+	                if (i < additionalServices.size() - 1) {
+	                    servicesString.append(";");
+	                }
+	            }
+	            
+	            Object[] row = {
+	                reservation.getStartDate().format(formatter),
+	                reservation.getEndDate().format(formatter),
+	                reservation.getRoom().getRoomNumber(),
+	                reservation.getRoomType(),
+	                reservation.getNumberOfGuests(),
+	                reservation.getReservationStatus(),
+	                servicesString.toString(),
+	                reservation.getTotalPrice()
+	            };
+	            tableModel.addRow(row);
+	        }
+	    }
+
+	    JTable table = new JTable(tableModel);
+	    JScrollPane scrollPane = new JScrollPane(table);
+	    scrollPane.setBounds(30, 30, 1400, 900);
+
+	    contentPane.removeAll();
+	    contentPane.setLayout(new BorderLayout());
+	    contentPane.add(scrollPane, BorderLayout.CENTER);
+	    contentPane.revalidate();
+	    contentPane.repaint();
+	    
+	    JButton processButton = new JButton("Otkaži izabranu rezervaciju");
+	    processButton.addActionListener(new ActionListener() {
+	        public void actionPerformed(ActionEvent e) {
+	            int selectedRow = table.getSelectedRow();
+	            if (selectedRow != -1) {
+	                String startDateStr = (String) table.getValueAt(selectedRow, 0);
+	                String endDateStr = (String) table.getValueAt(selectedRow, 1);
+	                String roomNumber = (String) table.getValueAt(selectedRow, 2);
+	                String id = startDateStr + "_" + endDateStr + "_" + roomNumber;
+
+	                Reservation reservationToCancel = hotelManager.getReservations().FindById(id);
+	                if (reservationToCancel != null) {
+	                    cancelSelectedReservation(reservationToCancel);
+	                } else {
+	                    JOptionPane.showMessageDialog(null, "Rezervacija nije pronađena.", "Greška", JOptionPane.ERROR_MESSAGE);
+	                }
+	            } else {
+	                JOptionPane.showMessageDialog(null, "Molimo izaberite rezervaciju za obradu.", "Greška", JOptionPane.ERROR_MESSAGE);
+	            }
+	        }
+	    });
+	    
+	    JPanel buttonPanel = new JPanel();
+	    buttonPanel.add(processButton);
+	    contentPane.add(buttonPanel, BorderLayout.SOUTH);
+	    contentPane.revalidate();
+	    contentPane.repaint();
+	}
+
+	protected void cancelSelectedReservation(Reservation reservationToCancel) {
+	    int confirmation = JOptionPane.showConfirmDialog(
+	        null, 
+	        "Da li ste sigurni da želite da otkažete ovu rezervaciju?", 
+	        "Potvrda otkazivanja", 
+	        JOptionPane.YES_NO_OPTION
+	    );
+
+	    if (confirmation == JOptionPane.YES_OPTION) {
+	        reservationToCancel.setReservationStatus(ReservationStatus.CANCELLED);
+	        hotelController.updateReservation(
+	            reservationToCancel.getStartDate(), 
+	            reservationToCancel.getEndDate(), 
+	            reservationToCancel.getRoom().getRoomNumber(), 
+	            reservationToCancel
+	        );
+
+	        JOptionPane.showMessageDialog(
+	            null, 
+	            "Rezervacija je uspešno otkazana.", 
+	            "Otkazivanje uspešno", 
+	            JOptionPane.INFORMATION_MESSAGE
+	        );
+	    } else {
+	        JOptionPane.showMessageDialog(
+	            null, 
+	            "Otkazivanje rezervacije je otkazano.", 
+	            "Otkazivanje otkazano", 
+	            JOptionPane.INFORMATION_MESSAGE
+	        );
+	    }
 	}
 }
