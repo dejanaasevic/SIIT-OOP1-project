@@ -10,6 +10,7 @@ import entity.Receptionist;
 import entity.Reservation;
 import entity.ReservationRequest;
 import entity.Room;
+import entity.RoomCleaningRecord;
 import manager.HotelManager;
 
 public class HotelController {
@@ -21,6 +22,7 @@ public class HotelController {
 	private PriceListController priceListController;
 	private ReservationRequestController reservationRequestController;
 	private ReservationController reservationController;
+	private RoomCleaningRecordController roomCleaningRecordController;
 
 	public HotelController(HotelManager hotelManager) {
         this.hotelManager = hotelManager;
@@ -30,6 +32,7 @@ public class HotelController {
         this.priceListController = new PriceListController(hotelManager);
         this.reservationRequestController = new ReservationRequestController(hotelManager);
         this.reservationController = new ReservationController(hotelManager);
+        this.roomCleaningRecordController = new RoomCleaningRecordController(hotelManager);
         initialize();
     }
 
@@ -39,7 +42,10 @@ public class HotelController {
 		additionalServiceController.readAdditionalServiceDataFromCSV();
 		priceListController.readPriceListDataFromCSV();
 		reservationRequestController.readReservationRequestsDataFromCSV();
+		reservationRequestController.checkAndRejectExpiredReservationRequests();
 		reservationController.readReservationDataFromCSV();
+		reservationController.checkAndRejectExpiredReservations();
+		roomCleaningRecordController.readRoomCleaningRecordsFromCSV();
 	}
 	
 	public void addHousekeeper(Housekeeper housekeeper) {
@@ -104,13 +110,21 @@ public class HotelController {
 		}	
 	}
 	public void addReservation(Reservation reservation) {
-		if(reservationController.writePiceListToCSV(reservation)) {
+		if(reservationController.writeReservationToCSV(reservation)) {
 			System.out.println("Podaci o rezervaciji su uspešno dodati u CSV fajl.");
 		}
 		else {
 			System.out.println("Greška prilikom dodavanja podataka o rezervaciji rezervacije u CSV fajl.");
+		}		
+	}
+	
+	public void addRoomCleaningRecord(RoomCleaningRecord roomCleaningRecord) {
+		if(roomCleaningRecordController.writeRoomCleaningRecordToCSV(roomCleaningRecord)) {
+			System.out.println("Podaci o RoomCleaningRecord su uspešno dodati u CSV fajl.");
+		}
+		else {
+			System.out.println("Greška prilikom dodavanja podataka o RoomCleaningRecord rezervacije u CSV fajl.");
 		}	
-		
 	}
 
 	public void updateReceptionist(Receptionist receptionist) {
@@ -174,11 +188,26 @@ public class HotelController {
 		}
 		else {
 			System.out.println("Greška prilikom ažurirani podataka o cenovniku iz CSV fajla.");
-		}	
-		
+		}		
 	}
 	
-
+	public void updateReservationRequest(ReservationRequest updatedRequest, ReservationRequest requestOriginal) {
+		if(reservationRequestController.updateReservationRequestFromCSV(updatedRequest,requestOriginal)) {
+			 System.out.println("Podaci o rezervaciji su uspešno ažurirani iz CSV fajla.");
+		}
+		else {
+			System.out.println("Greška prilikom ažuriranja podataka o rezervaciji iz CSV fajla.");
+		}	
+	}
+	
+	public void updateRoomCleaningRecord(RoomCleaningRecord selectedRoomCleaningRecord) {
+		if(roomCleaningRecordController.updateRoomCleaningRecordFromCSV(selectedRoomCleaningRecord)) {
+			 System.out.println("Podaci o RoomCleaningRecord su uspešno ažurirani iz CSV fajla.");
+		}
+		else {
+			System.out.println("Greška prilikom ažuriranja RoomCleaningRecord o rezervaciji iz CSV fajla.");
+		}
+	}
 	
 	public void deleteReceptionist(Receptionist receptionist) {
 		if(userController.deleteEmployeeFromCSV(receptionist)) {
@@ -244,12 +273,12 @@ public class HotelController {
 		
 	}
 
-
-	
-
-
-
-	
-
-	
+	public void deleteReservationRequest(ReservationRequest selectedRequest, ReservationRequest selectedRequestCopy) {
+		if(reservationRequestController.deleteReservationRequestFromCSV(selectedRequest,selectedRequestCopy)) {
+			 System.out.println("Podaci o zahtevu rezervacije su uspešno obrisani iz CSV fajla.");
+		}
+		else {
+			System.out.println("Greška prilikom brisanja podataka o zahtevu rezervacije iz CSV fajla.");
+		}	
+	}	
 }

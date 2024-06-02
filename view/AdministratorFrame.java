@@ -311,7 +311,7 @@ public class AdministratorFrame extends JFrame {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
         String[] columnNames = {
             "Ime", "Prezime", "Pol", "Datum rođenja",
-            "Telefon", "Adresa", "Korisničko ime", "Iskustvo",
+            "Telefon", "Adresa", "Korisničko ime", "Lozinka", "Iskustvo",
             "Plata", "Nivo kvalifikacije"
         };
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
@@ -333,6 +333,7 @@ public class AdministratorFrame extends JFrame {
                 phoneNumber,
                 employee.getAdress(),
                 employee.getUsername(),
+                employee.getPassword(),
                 employee.getExperience(),
                 employee.getSalary(),
                 employee.getQualificationLevel().toString()
@@ -377,16 +378,16 @@ public class AdministratorFrame extends JFrame {
             String password = JOptionPane.showInputDialog("Unesite lozinku:");
             String experienceStr = JOptionPane.showInputDialog("Unesite godine iskustva:");
             int experience = Integer.parseInt(experienceStr);
-            String salaryStr = JOptionPane.showInputDialog("Unesite platu:");
-            double salary = Double.parseDouble(salaryStr);
             String qualificationLevelStr = JOptionPane.showInputDialog("Unesite nivo kvalifikacije:");
             QualificationLevel qualificationLevel = QualificationLevel.valueOf(qualificationLevelStr.toUpperCase());
         
             if (receptionistButton.isSelected()) {
+            	Double salary = calculateReceptionistSalary(experience, qualificationLevelStr);
                 Receptionist newReceptionist = new Receptionist(name, surname, gender, dateOfBirth, phoneNumber, address, username, password, experience, salary, qualificationLevel);
                 hotelManager.addReceptionist(newReceptionist);
                 hotelController.addReceptionist(newReceptionist);
             } else if (housekeeperButton.isSelected()) {
+            	Double salary = calculateHousekeeperSalary(experience, qualificationLevelStr);
                 Housekeeper newHousekeeper = new Housekeeper(name, surname, gender, dateOfBirth, phoneNumber, address, username, password, experience, salary, qualificationLevel);
                 hotelManager.addHousekeeper(newHousekeeper);
                 hotelController.addHousekeeper(newHousekeeper);
@@ -396,7 +397,42 @@ public class AdministratorFrame extends JFrame {
         }
     }
     
-    protected void updateEmployee() {
+    private Double calculateHousekeeperSalary(int experience, String qualificationLevelStr) {
+		double baseSalary = 500;
+		double experienceCoefficient = 0.03;
+		double qualificationCoefficient = getQualificationCoefficient(qualificationLevelStr);
+        return baseSalary * (1 + experienceCoefficient * experience) * qualificationCoefficient;
+	}
+    
+	private Double calculateReceptionistSalary(int experience, String qualificationLevelStr) {
+		double baseSalary = 700;
+		double experienceCoefficient = 0.03;
+		double qualificationCoefficient = getQualificationCoefficient(qualificationLevelStr);
+        return baseSalary * (1 + experienceCoefficient * experience) * qualificationCoefficient;
+    }
+    
+    private static double getQualificationCoefficient(String qualification) {
+        switch (qualification.toLowerCase()) {
+            case "no qualification":
+                return 1.0;
+            case "beginner":
+                return 1.1;
+            case "intermediate":
+                return 1.2;
+            case "advanced":
+                return 1.3;
+            case "expert":
+                return 1.5;
+            case "master":
+                return 1.7;
+            case "specialist":
+                return 2.0;
+            default:
+                throw new IllegalArgumentException("Unknown qualification: " + qualification);
+        }
+    }
+
+	protected void updateEmployee() {
         String username = JOptionPane.showInputDialog("Unesite korisničko ime zaposlenog čije informacije želite da ažurirate:");
         Employee employeeToUpdate = hotelManager.getEmployees().FindById(username);
         
@@ -1114,7 +1150,10 @@ public class AdministratorFrame extends JFrame {
 	            addMoreServices = JOptionPane.showConfirmDialog(null, "Želite li da dodate još neku dodatnu uslugu?", "Dodavanje dodatnih usluga", JOptionPane.YES_NO_OPTION);
 	        }
 
+	        
 	        Reservation reservation = new Reservation(reservationRequest, room);
+	        double price = calculateReservationPrice(reservation);
+	        reservation.setPrice(price);
 	        hotelManager.addReservation(reservation);
 	        hotelController.addReservation(reservation);
 
@@ -1125,5 +1164,30 @@ public class AdministratorFrame extends JFrame {
 	        e.printStackTrace();
 	    }
 	    showReservations();
+	}
+
+	private double calculateReservationPrice(Reservation reservation) {
+	    double totalPrice = 0;
+	    LocalDate date = reservation.getStartDate();
+
+	    while (!date.isAfter(reservation.getEndDate())) {
+	        PriceList priceListForDate = hotelManager.getPriceListByDate(date);
+	        if (priceListForDate != null) {
+	            Double roomPrice = priceListForDate.findRoomPrice(reservation.getRoomType());
+	            if (roomPrice != null) {
+	                totalPrice += roomPrice;
+	            }
+
+	            List<AdditionalService> additionalServices = reservation.getAdditionalService();
+	            for (AdditionalService service : additionalServices) {
+	                Double servicePrice = priceListForDate.findAdditionalServicePrice(service.getName());
+	                if (servicePrice != null) {
+	                    totalPrice += servicePrice;
+	                }
+	            }
+	        }
+	        date = date.plusDays(1);
+	    }
+	    return totalPrice;
 	}
 }

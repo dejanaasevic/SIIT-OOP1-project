@@ -28,7 +28,7 @@ public class Reservation {
 		this.room = room;
 		this.guest = guest;
 		this.id = generateID();
-		this.totalPrice = calculateTotalPrice();
+		this.totalPrice = 0;
 		this.additionalServices = new ArrayList<>();
 	}
 	
@@ -45,6 +45,7 @@ public class Reservation {
 		this.additionalServices = reservationRequest.getAdditionalServices();
 		
 	}
+	
 
 	private String generateID() {
 		return this.startDate.toString() + "_" + endDate.toString() + "_" + this.room.getRoomNumber();
@@ -68,6 +69,10 @@ public class Reservation {
 	
 	public void setRoomType(RoomType roomType) {
 		this.roomType = roomType;
+	}
+
+	public void setPrice(double price) {
+		this.totalPrice = price;
 	}
 	
 	public void setNumberOfGuests(int numberOfGuests) {
@@ -95,8 +100,8 @@ public class Reservation {
 	}
 	
 	
-	public void getTotalPrice(double totalPrice) {
-		this.totalPrice = totalPrice;
+	public double getPrice() {
+		return this.totalPrice;
 	}
 	
 	public RoomType getRoomType() {
@@ -173,7 +178,8 @@ public class Reservation {
             reservationStatus.toString(), 
             guest.getUsername(), 
             servicesString.toString(), 
-            room.getRoomNumber()
+            room.getRoomNumber(),
+            String.valueOf(totalPrice)
         );
     }
 	

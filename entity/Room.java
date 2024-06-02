@@ -19,7 +19,7 @@ public class Room {
 		this.roomNumber = roomNumber;
 	}
 	
-	public void roomStatus(RoomStatus roomStatus) {
+	public void setRoomStatus(RoomStatus roomStatus) {
 		this.roomStatus = roomStatus;
 	}
 	

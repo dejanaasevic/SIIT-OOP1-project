@@ -24,6 +24,7 @@ import controller.HotelController;
 import entity.AdditionalService;
 import entity.Gender;
 import entity.Guest;
+import entity.Reservation;
 import entity.ReservationRequest;
 import entity.RoomType;
 import manager.HotelManager;
@@ -36,57 +37,62 @@ public class GuestFrame extends JFrame {
 	private HotelController hotelController;
 	private String username;
 	
-	public GuestFrame(HotelManager hotelManager, HotelController hotelController,String username) {
-		this.hotelManager = hotelManager;
-		this.hotelController = hotelController;
-		this.username = username;
-		initializeUI();
-		
+	public GuestFrame(HotelManager hotelManager, HotelController hotelController, String username) {
+	    this.hotelManager = hotelManager;
+	    this.hotelController = hotelController;
+	    this.username = username;
+	    initializeUI();
 	}
 
 	private void initializeUI() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 50, 1500, 1000);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
-		this.setTitle("Hotel Management System - Guest Panel");
-		this.setVisible(true);
-		this.setResizable(false);
-		
-		JMenuBar menuBar = new JMenuBar();
-        setJMenuBar(menuBar);
-        
-        JMenu reservationRequestMenu = new JMenu("Zahtev Rezervacije");
-        menuBar.add(reservationRequestMenu);
-        JMenuItem showreservationRequests = new JMenuItem("Pregledaj sve zahteve rezervacija");
-        reservationRequestMenu.add(showreservationRequests);
-        JMenuItem addreservationRequests = new JMenuItem("Dodaj novi zahtev rezervacije");
-        reservationRequestMenu.add(addreservationRequests);
-        JMenuItem updatereservationRequests = new JMenuItem("Izmeni zahtev rezervacije");
-        reservationRequestMenu.add(updatereservationRequests);
-        JMenuItem deletereservationRequests = new JMenuItem("Obriši zahtev rezervacije");
-        reservationRequestMenu.add(deletereservationRequests);
-               
-        JMenu reservationMenu = new JMenu("Rezervacije");
-        menuBar.add(reservationMenu);
-        JMenuItem showReservation = new JMenuItem("Prikaz svih rezervacija");
-        reservationMenu.add(showReservation);
-        JMenuItem cancelReservation= new JMenuItem("Otkaži rezervaciju");
-        reservationMenu.add(cancelReservation);
-        
-        showreservationRequests.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-            	showUserReservationRequests();
-            }
-        });
-        
-        addreservationRequests.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-            	addreservationRequests();
-            }
-        });
+	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    setBounds(100, 50, 1500, 1000);
+	    contentPane = new JPanel();
+	    contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+	    contentPane.setLayout(new BorderLayout());
+	    setContentPane(contentPane);
+	    this.setTitle("Hotel Management System - Guest Panel");
+	    this.setVisible(true);
+	    this.setResizable(false);
+
+	    JMenuBar menuBar = new JMenuBar();
+	    setJMenuBar(menuBar);
+
+	    JMenu reservationRequestMenu = new JMenu("Zahtev Rezervacije");
+	    menuBar.add(reservationRequestMenu);
+	    JMenuItem showreservationRequests = new JMenuItem("Pregledaj sve zahteve rezervacija"); 
+	    reservationRequestMenu.add(showreservationRequests);
+	    JMenuItem addreservationRequests = new JMenuItem("Dodaj novi zahtev rezervacije"); 
+	    reservationRequestMenu.add(addreservationRequests);
+	    JMenuItem updatereservationRequests = new JMenuItem("Izmeni zahtev rezervacije");
+	    reservationRequestMenu.add(updatereservationRequests);
+	    JMenuItem deletereservationRequests = new JMenuItem("Obriši zahtev rezervacije");
+	    reservationRequestMenu.add(deletereservationRequests);
+
+	    JMenu reservationMenu = new JMenu("Rezervacije");
+	    menuBar.add(reservationMenu);
+	    JMenuItem showReservation = new JMenuItem("Prikaz svih rezervacija"); 
+	    reservationMenu.add(showReservation);
+	    JMenuItem cancelReservation = new JMenuItem("Otkaži rezervaciju");
+	    reservationMenu.add(cancelReservation);
+
+	    showreservationRequests.addActionListener(new ActionListener() {
+	        public void actionPerformed(ActionEvent e) {
+	            showUserReservationRequests();
+	        }
+	    });
+
+	    addreservationRequests.addActionListener(new ActionListener() {
+	        public void actionPerformed(ActionEvent e) {
+	            addreservationRequests();
+	        }
+	    });
+
+	    showReservation.addActionListener(new ActionListener() {
+	        public void actionPerformed(ActionEvent e) {
+	            showUserReservations();
+	        }
+	    });
 	}
 
 
@@ -166,8 +172,11 @@ public class GuestFrame extends JFrame {
 	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 	        String endDateStr = JOptionPane.showInputDialog("Unesite datum odlaska (dd.MM.yyyy.):");
 	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
-	        
-	        String[] roomTypes = {"SINGLE", "DOUBLE", "TWIN", "TRIPLE"};
+	        List<String> roomTypesList = hotelManager.getAvailableRoomTypes(startDate, endDate);
+	        String[] roomTypes = new String [roomTypesList.size()];
+	        for(int i = 0; i<roomTypesList.size(); i++ ) {
+	        	roomTypes[i] = roomTypesList.get(i);
+	        }
 	        String roomTypeStr = (String) JOptionPane.showInputDialog(null, "Izaberite tip sobe:", "Tip Sobe", 
 	                JOptionPane.QUESTION_MESSAGE, null, roomTypes, roomTypes[0]);
 	        RoomType roomType = RoomType.valueOf(roomTypeStr);
@@ -207,5 +216,58 @@ public class GuestFrame extends JFrame {
 	        JOptionPane.showMessageDialog(null, "Došlo je do greške prilikom kreiranja rezervacije. Proverite unete podatke i pokušajte ponovo.");
 	        e.printStackTrace();
 	    }
+	}
+	
+	protected void showUserReservations() {
+	    Map<String, Reservation> reservationMap = hotelManager.getReservations().get();
+	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
+	    
+	    String[] columnNames = {
+	        "Datum početka", "Datum kraja", "Broj sobe", "Tip sobe", "Broj Gostiju", 
+	        "Status", "Dodatne usluge", "Cena"
+	    };
+	    
+	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+	        @Override
+	        public boolean isCellEditable(int row, int column) {
+	            return false; 
+	        }
+	    };
+
+	    for (Reservation reservation : reservationMap.values()) {
+	        if (reservation.getGuest().getUsername().equals(this.username)) {
+	            List<AdditionalService> additionalServices = reservation.getAdditionalService();
+	            StringBuilder servicesString = new StringBuilder();
+	            
+	            for (int i = 0; i < additionalServices.size(); i++) {
+	                servicesString.append(additionalServices.get(i).getName());
+	                if (i < additionalServices.size() - 1) {
+	                    servicesString.append(";");
+	                }
+	            }
+	            
+	            Object[] row = {
+	                reservation.getStartDate().format(formatter),
+	                reservation.getEndDate().format(formatter),
+	                reservation.getRoom().getRoomNumber(),
+	                reservation.getRoomType(),
+	                reservation.getNumberOfGuests(),
+	                reservation.getReservationStatus(),
+	                servicesString.toString(),
+	                reservation.getTotalPrice()
+	            };
+	            tableModel.addRow(row);
+	        }
+	    }
+
+	    JTable table = new JTable(tableModel);
+	    JScrollPane scrollPane = new JScrollPane(table);
+	    scrollPane.setBounds(30, 30, 1400, 900); 
+
+	    contentPane.removeAll(); 
+	    contentPane.setLayout(new BorderLayout()); 
+	    contentPane.add(scrollPane, BorderLayout.CENTER);
+	    contentPane.revalidate();
+	    contentPane.repaint();
 	}
 }

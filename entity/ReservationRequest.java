@@ -127,4 +127,16 @@ public class ReservationRequest{
 
 		return csvString.toString();
 	}
+
+    public ReservationRequest copy() {
+        ReservationRequest copy = new ReservationRequest(this.roomType, this.numberOfGuests, this.startDate, this.endDate, this.guest);
+        copy.setReservationStatus(this.reservationStatus);
+        List<AdditionalService> additionalServicesCopy = new ArrayList<>();
+        for (AdditionalService additionalService : this.additionalServices) {
+            AdditionalService newService = new AdditionalService(additionalService.getName(), additionalService.getPrice());
+            additionalServicesCopy.add(newService);
+        }
+        copy.setAdditionalServices(additionalServicesCopy);
+        return copy;
+    }
 }

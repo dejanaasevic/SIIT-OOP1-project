@@ -42,6 +42,7 @@ public class ReservationController {
 	            ReservationStatus reservationStatus = ReservationStatus.valueOf(data[4].trim());
 	            String guestUsername = data[5].trim();
 	            String roomNumber = data[7].trim();
+	            double price = Double.parseDouble(data[8].trim());
 	            
 	            Room room = hotelManager.getRooms().FindById(roomNumber);
 	            Guest guest = hotelManager.getGuests().FindById(guestUsername);
@@ -51,6 +52,7 @@ public class ReservationController {
 	            
 	            Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, room, guest);
 	            reservation.setReservationStatus(reservationStatus);
+	            reservation.setPrice(price);
 	            
 	            if (data.length > 6 && !data[6].trim().isEmpty()) {
 	                String[] additionalServices = data[6].split(";");
@@ -80,9 +82,11 @@ public class ReservationController {
                 String startDateString = data[2].trim();
                 String endDateString = data[3].trim();
                 String roomNumber = data[7].trim();
+                double price = Double.parseDouble(data[8].trim());
                 if (!startDateString.equals(reservation.getStartDate().toString()) &&
                     !endDateString.equals(reservation.getEndDate().toString()) &&
-                    !roomNumber.equals(reservation.getRoom().getRoomNumber())){
+                    !roomNumber.equals(reservation.getRoom().getRoomNumber()) &&
+                    price != reservation.getPrice()){
                     lines.add(line);
                 } else {
                     isDeleted = true;
@@ -107,7 +111,7 @@ public class ReservationController {
         }
     }
 
-	public boolean writePiceListToCSV(Reservation reservation) {
+	public boolean writeReservationToCSV(Reservation reservation) {
 		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename, true)))) {
             writer.println(reservation.toCSVString());
             return true;
@@ -127,7 +131,9 @@ public class ReservationController {
 	            String csvStartDate = data[2];
 	            String csvEndDate = data[3];
 	            String csvRoomStr = data[7];
-	            if (csvStartDate.equals(startDate.toString()) && csvEndDate.equals(endDate.toString()) && csvRoomStr.equals(roomStr)) {
+	            double price = Double.parseDouble(data[8].trim());
+	            if (csvStartDate.equals(startDate.toString())
+	            		&& csvEndDate.equals(endDate.toString()) && csvRoomStr.equals(roomStr) && price == reservation.getPrice()) {
 	                lines.add(reservation.toCSVString());
 	                isUpdated = true;
 	            } else {
@@ -151,5 +157,17 @@ public class ReservationController {
 	        }
 	    }
 	    return false;
+	}
+
+	public void checkAndRejectExpiredReservations() {
+		LocalDate today = LocalDate.now();
+		for (Reservation reservation : hotelManager.getReservations().get().values()) {
+            if (reservation.getReservationStatus() == ReservationStatus.CONFIRMED &&
+                reservation.getEndDate().isBefore(today)) {
+                reservation.setReservationStatus(ReservationStatus.COMPLETED);
+                updateReservationInCSV(reservation.getStartDate(), reservation.getEndDate(),reservation.getRoom().getRoomNumber(),reservation);
+            }
+        }
+		
 	}
 }

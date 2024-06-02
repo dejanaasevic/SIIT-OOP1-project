@@ -2,6 +2,10 @@ package manager;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import entity.AdditionalService;
 import entity.Administrator;
@@ -14,6 +18,8 @@ import entity.Reservation;
 import entity.ReservationRequest;
 import entity.ReservationStatus;
 import entity.Room;
+import entity.RoomCleaningRecord;
+import entity.RoomType;
 
 public class HotelManager {
     private AdministratorManager administrators;
@@ -27,6 +33,7 @@ public class HotelManager {
     private RoomManager rooms;
     private UserManager users;
     private ReservationRequestManager reservationRequests;
+    private RoomCleaningRecordManager roomCleaningRecords;
 
     public HotelManager() {
     	this.administrators = new AdministratorManager();
@@ -40,6 +47,7 @@ public class HotelManager {
         this.rooms = new RoomManager();
         this.users = new UserManager();
         this.reservationRequests = new ReservationRequestManager();
+        this.roomCleaningRecords = new RoomCleaningRecordManager();
     }
 
 	public AdministratorManager getAdministrators() {
@@ -85,6 +93,9 @@ public class HotelManager {
 
     public UserManager getUsers() {
         return users;
+    }
+    public RoomCleaningRecordManager getRoomCleaningRecordManager() {
+        return roomCleaningRecords;
     }
 
 	public void addAdministrator(Administrator administrator) {
@@ -211,12 +222,24 @@ public class HotelManager {
 	}
 
 	private boolean isRoomAvailable(Room room, LocalDate startDate, LocalDate endDate) {
-		for (Reservation  reservation : reservations.get().values()) {
-			if (!(endDate.isBefore(reservation.getStartDate()) || startDate.isAfter(reservation.getEndDate()))) {
-                return false; 
-            }
-        }
-		return true; 
+	    for (Reservation reservation : reservations.get().values()) {
+	        if (reservation.getRoom().equals(room)) {
+	            if (!(endDate.isBefore(reservation.getStartDate()) || startDate.isAfter(reservation.getEndDate()))) {
+	                return false; 
+	            }
+	        }
+	    }
+	    return true; 
+	}
+	
+	public List<Room> getAvailableRooms(RoomType roomType, LocalDate startDate, LocalDate endDate) {
+		List<Room> availableRooms = new ArrayList<>();
+		for(Room room: rooms.get().values()) {
+			if(isRoomAvailable(room, startDate, endDate) && room.getRoomType().equals(roomType)) {
+				availableRooms.add(room);
+			}
+		}
+		return availableRooms;
 	}
 
 	public void displayGuestReservations(Guest guest) {
@@ -236,7 +259,7 @@ public class HotelManager {
 			System.out.println("Trenutno nema ni jedne potvrđene rezervacije.\n");
 		}
 	}
-
+	
 	public void addReservationRequest(ReservationRequest reservationRequest) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
 		String startDate = reservationRequest.getStartDate().format(formatter);
@@ -253,6 +276,16 @@ public class HotelManager {
 		else {
 			System.out.println("Rezervacija već postoji.\n");
 		}
+	}
+	
+	public void addRoomCleaningRecord(RoomCleaningRecord roomCleaningRecord) {
+		if(roomCleaningRecords.add(roomCleaningRecord.getID(), roomCleaningRecord)) {
+			System.out.println("Uspešno ste dodali RoomCleaningRecord.\n");
+		}
+		else {
+			System.out.println("RoomCleaningRecord već postoji.\n");
+		}
+		
 	}
 	
 	public String getUserType(String username) {
@@ -379,10 +412,44 @@ public class HotelManager {
 	    	System.out.println("Podaci o cenovniku su uspešno obrisani.");
 	    }
 	}
+	
+	public void deleteReservationRequest(ReservationRequest selectedRequest) {
+		if (reservationRequests.removeReservationRequest(selectedRequest)){
+	    	System.out.println("Podaci o zahtevu rezervacije su uspešno obrisani.");
+	    }
+	}
+		
 
 	public void deleteReservation(Reservation reservation) {
 		if (reservations.remove(reservation.getID())) {
-	    	System.out.println("Podaci o cenovniku su uspešno obrisani.");
+	    	System.out.println("Podaci o rezervaciji su uspešno obrisani.");
 	    }
 	}
+
+	public List<String> getAvailableRoomTypes(LocalDate startDate, LocalDate endDate) {
+	    List<String> availableRoomTypes = new ArrayList<>();
+	    for (Room room : rooms.get().values()) {
+	        if (isRoomAvailable(room, startDate, endDate) && !availableRoomTypes.contains(room.getRoomType().toString())) {
+	            availableRoomTypes.add(room.getRoomType().toString());
+	        }
+	    }
+	    return availableRoomTypes;
+	}
+
+	public void addRoomCleaningRecord(String id, RoomCleaningRecord roomCleaningRecord) {
+		if (roomCleaningRecords.add(roomCleaningRecord.getID(), roomCleaningRecord)) {
+	    	System.out.println("Podaci o RoomCleaningRecord su uspešno dodati.");
+	    }		
+	}
+
+	public PriceList getPriceListByDate(LocalDate date) {
+	    Collection<PriceList> allPriceLists = priceLists.get().values();
+	    for (PriceList priceList : allPriceLists) {
+	        if (!priceList.getStartDate().isAfter(date) && !priceList.getEndDate().isBefore(date)) {
+	            return priceList;
+	        }
+	    }
+	    return null;
+	}
+
 }
