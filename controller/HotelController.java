@@ -3,12 +3,14 @@ package controller;
 import java.time.LocalDate;
 
 import entity.AdditionalService;
+import entity.Expense;
 import entity.Guest;
 import entity.Housekeeper;
 import entity.PriceList;
 import entity.Receptionist;
 import entity.Reservation;
 import entity.ReservationRequest;
+import entity.Revenue;
 import entity.Room;
 import entity.RoomCleaningRecord;
 import manager.HotelManager;
@@ -23,7 +25,10 @@ public class HotelController {
 	private ReservationRequestController reservationRequestController;
 	private ReservationController reservationController;
 	private RoomCleaningRecordController roomCleaningRecordController;
-
+	private ExpenseController expenseController;
+	private RevenueController revenueController;
+	
+	
 	public HotelController(HotelManager hotelManager) {
         this.hotelManager = hotelManager;
         this.userController = new UserController(hotelManager);
@@ -33,6 +38,8 @@ public class HotelController {
         this.reservationRequestController = new ReservationRequestController(hotelManager);
         this.reservationController = new ReservationController(hotelManager);
         this.roomCleaningRecordController = new RoomCleaningRecordController(hotelManager);
+        this.expenseController = new ExpenseController(hotelManager);
+        this.revenueController = new RevenueController(hotelManager);
         initialize();
     }
 
@@ -46,6 +53,8 @@ public class HotelController {
 		reservationController.readReservationDataFromCSV();
 		reservationController.checkAndRejectExpiredReservations();
 		roomCleaningRecordController.readRoomCleaningRecordsFromCSV();
+		revenueController.readRevenuesFromCSV();
+		expenseController.readExpensesFromCSV();
 	}
 	
 	public void addHousekeeper(Housekeeper housekeeper) {
@@ -280,5 +289,23 @@ public class HotelController {
 		else {
 			System.out.println("Greška prilikom brisanja podataka o zahtevu rezervacije iz CSV fajla.");
 		}	
-	}	
+	}
+
+	public void addRevenue(Revenue revenue) {
+		if(revenueController.addRevenueToCSV(revenue)) {
+			System.out.println("Podaci o prihodu su uspešno dodati u CSV fajl.");
+		}
+		else {
+			System.out.println("Greška prilikom dodavanja podataka o prihodu u CSV fajl.");
+		}
+	}
+
+	public void addExpense(Expense expence) {
+		if(expenseController.addExpenseToCSV(expence)) {
+			System.out.println("Podaci o rashod su uspešno dodati u CSV fajl.");
+		}
+		else {
+			System.out.println("Greška prilikom dodavanja podataka o rashodu u CSV fajl.");
+		}
+	}
 }

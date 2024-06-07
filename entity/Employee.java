@@ -57,4 +57,20 @@ public class Employee extends User {
 	            "plata: " + this.salary + '\n' +
 	            "nivo kvalifikacije: " + this.qualificationLevel.getDescription() + '\n'+'\n';
 	}
+
+	public Employee copy() {
+        return new Employee(
+            this.getName(),
+            this.getSurname(),
+            this.getGender(),
+            this.getDateOfBirth(),
+            this.getPhoneNumber(),
+            this.getAdress(),
+            this.getUsername(),
+            this.getPassword(),
+            this.experience,
+            this.salary,
+            this.qualificationLevel
+        );
+    }
 }

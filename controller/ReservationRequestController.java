@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import entity.AdditionalService;
+import entity.Expense;
 import entity.Guest;
 import entity.ReservationRequest;
 import entity.ReservationStatus;
@@ -56,7 +57,8 @@ public class ReservationRequestController {
 	                    
 	                }
 	            }
-	            
+	            String price = data[7];
+	            reservationRequest.setPrice(Double.parseDouble(price));
 	            hotelManager.addReservationRequest(reservationRequest);
 	        }
 	    } catch (IOException e) {
@@ -75,7 +77,7 @@ public class ReservationRequestController {
     }
 
 	public boolean updateReservationRequestFromCSV(ReservationRequest updatedRequest, ReservationRequest requestOriginal) {
-		List<String> lines = new ArrayList<>();
+	    List<String> lines = new ArrayList<>();
 	    boolean isUpdated = false;
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
 
@@ -83,11 +85,17 @@ public class ReservationRequestController {
 	        String line;
 	        while ((line = br.readLine()) != null) {
 	            String[] data = line.split(",");
-	            String csvRoomType = data[0];
-	            String csvStartDate = data[2];
-	            String csvEndDate = data[3];
-	            String csvStatus = data[4];
-	            String csvUsername = data[5];
+	            if (data.length < 6) {
+	                System.err.println("Invalid line format: " + line);
+	                lines.add(line);
+	                continue;
+	            }
+
+	            String csvRoomType = data[0].trim();
+	            String csvStartDate = data[2].trim();
+	            String csvEndDate = data[3].trim();
+	            String csvStatus = data[4].trim();
+	            String csvUsername = data[5].trim();
 
 	            String reqRoomType = requestOriginal.getRoomType().name();
 	            String reqStartDate = requestOriginal.getStartDate().format(formatter);
@@ -96,7 +104,7 @@ public class ReservationRequestController {
 	            String reqUsername = requestOriginal.getGuest().getUsername();
 
 	            if (csvRoomType.equals(reqRoomType) && csvStartDate.equals(reqStartDate) &&
-	                csvEndDate.equals(reqEndDate) && csvStatus.equals(reqStatus) && 
+	                csvEndDate.equals(reqEndDate) && csvStatus.equals(reqStatus) &&
 	                csvUsername.equals(reqUsername)) {
 	                String updatedLine = updatedRequest.toCSVString();
 	                lines.add(updatedLine);
@@ -109,7 +117,7 @@ public class ReservationRequestController {
 	        e.printStackTrace();
 	        return false;
 	    }
-	    
+
 	    if (isUpdated) {
 	        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename)))) {
 	            for (String updatedLine : lines) {
@@ -121,37 +129,49 @@ public class ReservationRequestController {
 	            return false;
 	        }
 	    }
+
 	    return false;
 	}
-
 	public boolean deleteReservationRequestFromCSV(ReservationRequest reservationRequest, ReservationRequest requestOriginal) {
 	    List<String> lines = new ArrayList<>();
 	    boolean isDeleted = false;
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
-	    
+
 	    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
 	        String line;
 	        while ((line = br.readLine()) != null) {
 	            String[] data = line.split(",");
-	            String csvRoomType = data[0];
-	            String csvStartDate = data[2];
-	            String csvEndDate = data[3];
-	            String csvStatus = data[4];
-	            String csvUsername = data[5];
+	            String csvRoomType = data[0].trim();
+	            int csvNumberOfGuests = Integer.parseInt(data[1].trim());
+	            String csvStartDate = data[2].trim();
+	            String csvEndDate = data[3].trim();
+	            String csvStatus = data[4].trim();
+	            String csvUsername = data[5].trim();
 
 	            String reqRoomType = requestOriginal.getRoomType().name();
+	            int reqNumberOfGuests = requestOriginal.getNumberOfGuests();
 	            String reqStartDate = requestOriginal.getStartDate().format(formatter);
 	            String reqEndDate = requestOriginal.getEndDate().format(formatter);
 	            String reqStatus = requestOriginal.getReservationStatus().name();
 	            String reqUsername = requestOriginal.getGuest().getUsername();
-	            if (!(csvRoomType.equals(reqRoomType) && 
-	                  csvStartDate.equals(reqStartDate) &&
-	                  csvEndDate.equals(reqEndDate) && 
-	                  csvStatus.equals(reqStatus) && 
-	                  csvUsername.equals(reqUsername))) {
-	                lines.add(line);
-	            } else {
+
+	            System.out.println("CSV RoomType: " + csvRoomType + ", Request RoomType: " + reqRoomType);
+	            System.out.println("CSV NumberOfGuests: " + csvNumberOfGuests + ", Request NumberOfGuests: " + reqNumberOfGuests);
+	            System.out.println("CSV StartDate: " + csvStartDate + ", Request StartDate: " + reqStartDate);
+	            System.out.println("CSV EndDate: " + csvEndDate + ", Request EndDate: " + reqEndDate);
+	            System.out.println("CSV Status: " + csvStatus + ", Request Status: " + reqStatus);
+	            System.out.println("CSV Username: " + csvUsername + ", Request Username: " + reqUsername);
+
+	            // Check if all fields match
+	            if (csvRoomType.equals(reqRoomType) && 
+	                csvNumberOfGuests == reqNumberOfGuests &&
+	                csvStartDate.equals(reqStartDate) &&
+	                csvEndDate.equals(reqEndDate) &&
+	                csvStatus.equals(reqStatus) &&
+	                csvUsername.equals(reqUsername)) {
 	                isDeleted = true;
+	            } else {
+	                lines.add(line);
 	            }
 	        }
 	    } catch (IOException e) {
@@ -174,6 +194,7 @@ public class ReservationRequestController {
 	    }
 	}
 
+
 	public void checkAndRejectExpiredReservationRequests() {
 		LocalDate today = LocalDate.now();
 		List<ReservationRequest> reservationRequests = hotelManager.getReservationRequests().getReservationRequests();
@@ -183,8 +204,51 @@ public class ReservationRequestController {
 				ReservationRequest reservationRequestCopy = reservationRequest.copy();
 				reservationRequest.setReservationStatus(ReservationStatus.REJECTED);
 				updateReservationRequestFromCSV(reservationRequest,reservationRequestCopy);
+	            Expense expence = new Expense(reservationRequest.getGuest(), reservationRequest.getRoomType(),today, reservationRequest.getPrice());
+	            hotelManager.addExpense(expence);
+	            deleteExpenseFromCSV(expence);
 			}
 		}
 		
 	}
+	
+	 public boolean deleteExpenseFromCSV(Expense expenseToDelete) {
+	        List<String> lines = new ArrayList<>();
+	        boolean isDeleted = false;
+
+	        try (BufferedReader br = new BufferedReader(new FileReader("src/data/expenses.csv"))) {
+	            String line;
+	            while ((line = br.readLine()) != null) {
+	                String[] data = line.split(",");
+	                Guest guest = hotelManager.getGuests().FindById(data[0]);
+	                RoomType roomType = RoomType.valueOf(data[1]);
+	                LocalDate date = LocalDate.parse(data[2], dateFormatter);
+	                double amount = Double.parseDouble(data[3]);
+	                
+	                Expense expense = new Expense(guest, roomType, date, amount);
+
+	                if (!expense.equals(expenseToDelete)) {
+	                    lines.add(line);
+	                } else {
+	                    isDeleted = true;
+	                }
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+
+	        if (isDeleted) {
+	            try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("src/data/expenses.csv")))) {
+	                for (String updatedLine : lines) {
+	                    writer.println(updatedLine);
+	                }
+	                return true;
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	                return false;
+	            }
+	        } else {
+	            return false;
+	        }
+	    }
 }

@@ -1,12 +1,5 @@
-Administrator,Pera,Perić,MALE,1989-12-13,"381640001111",Zlatne grede 10 Novi Sad,pera_peric,peraperic89,,,
-Receptionist,Mika,Mikić,MALE,1990-05-15,"+381641010220",Njegoševa 12 Novi Sad,mika_mikic,mikamikic90,10,2500,ADVANCED
-Housekeeper,Jana,Janić,FEMALE,1995-08-25,"+381641010600",Branka Radičevića 15 Novi Sad,jana_janic,janajanic95,1,1000,BEGINNER
-Guest,Milica,Milić,FEMALE,1990-07-10,"+3816410003049",Kneza Mihaila 1 Beograd,milica.milic@gmail.com,123456789,,,
-Guest,Ana,Anić,FEMALE,1995-04-20,"+381641000112",Terazije 10 Beograd,ana.anic@gmail.com,20049520,,,
-Receptionist,Anastasija,Radić,FEMALE,2000-11-20,"+3810064765",Zmaj Jovina 11 Novi Sad,anastastijaradic,anastasija00,5,1200.0,ADVANCED
-Housekeeper,Marko,Mandic,MALE,1999-12-11,"+3816578230",Dobrovoljacka 3 Sirig,marko_mandic,marko123,3,1300.0,BEGINNER
-Guest,Ankica,Atanasijevic,FEMALE,1980-10-20,"+4832749839",Beogradska 11 Novi Sad,ankica.atanasijevic@gmail.com,232721947,
-Guest,Dejana,Šević,FEMALE,2004-09-24,"+381640064765",Braće Krkljuš 28 Novi Sad,dejana.sevic@gmail.com,2409004805065,
-Guest,Zeljana,Sevic,FEMALE,2000-11-20,"+203820938",Zmaj Jovina 2 Novi Sad,zeljanaasevic@gmail.com,3498338320,
-Guest,Tea,Tairovic,FEMALE,2024-04-14,"+2439048290",Beogradska 2 Novi Sad,teateirovic@gmail.com,390282839,
-Housekeeper,Ana,Mitrovic,FEMALE,1999-11-13,"+38294032848",Nikola Tesla 13 Novi Sad,anamitrovic,12345,5,1230.0,ADVANCED
+Administrator,Pera,Perić,MALE,1989-12-13,"+381640001111",Zlatne grede 10 Novi Sad,pera_peric,pera123
+Receptionist,Mika,Mikić,MALE,1975-11-13,"+38169480355",Bulevar Oslobođenja 1 Novi Sad,mika_mikic,mika123,15,1725.5,MASTER
+Housekeeper,Jana,Janić,FEMALE,1998-09-24,"+381640064765",Nikola Tesla 18 Novi Sad,jana_janic,jana123,5,747.5,ADVANCED
+Guest,Milica,Milić,FEMALE,2001-01-11,"+38164000001",Kralja Petra I 1 Novi Sad,milica.milic@gmail.com,1111,
+Guest,Ana,Anic,FEMALE,1999-07-12,"+381657788432",Dobrovoljačka 7 Novi Sad,ana.anic@gmail.com,1111,

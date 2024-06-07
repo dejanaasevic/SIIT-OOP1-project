@@ -1,19 +1,15 @@
 package view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
 import controller.HotelController;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import manager.HotelManager;
 
-
 public class MainFrame extends JFrame {
+	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private JTextField textFieldUsername;
-	private JPasswordField passwordField;
 	private HotelManager hotelManager;
 	private HotelController hotelController;
 
@@ -45,7 +41,6 @@ public class MainFrame extends JFrame {
         JLabel usernameLabel = new JLabel("Korisničko ime: ");
         usernameLabel.setBounds(50, 50, 120, 25);
         contentPane.add(usernameLabel);
-        
         
         JTextField usernameField = new JTextField();
         usernameField.setBounds(166, 50, 154, 25);
@@ -93,10 +88,10 @@ public class MainFrame extends JFrame {
                 	}
                 	else {
                 		if(getUserType(username)== null) {
-                			JOptionPane.showMessageDialog(MainFrame.this, "Korisničko ime ne postoji", "Neuspešna prijava", JOptionPane.ERROR_MESSAGE);
+                			JOptionPane.showMessageDialog(MainFrame.this, "Uneto korisničko ime ne postoji", "Neuspešna prijava", JOptionPane.ERROR_MESSAGE);
                 		}
                 		else {
-                			JOptionPane.showMessageDialog(MainFrame.this, "Porešna lozinka", "Neuspešna prijava", JOptionPane.ERROR_MESSAGE);
+                			JOptionPane.showMessageDialog(MainFrame.this, "Uneta lozinka je pogrešna", "Neuspešna prijava", JOptionPane.ERROR_MESSAGE);
                 		}
                 	}
                 }
@@ -110,7 +105,6 @@ public class MainFrame extends JFrame {
 		return hotelManager.getUserType(username);
 	}
 	
-
 	private boolean validPassword(String username, String password) {
 		return hotelManager.validPassword(username,password);
 	}

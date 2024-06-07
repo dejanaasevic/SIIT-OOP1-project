@@ -1,5 +1,3 @@
-TWIN,4,2024-06-06,2024-06-14,CONFIRMED,ana.anic@gmail.com,Večera;Teretana,301,100
-DOUBLE,2,2024-07-29,2024-07-05,CONFIRMED,milica.milic@gmail.com,Bazen;Teretana;Večera,201,110
-TWIN,2,2024-07-28,2024-08-10,CONFIRMED,ankica.atanasijevic@gmail.com,Bazen,301,150
-SINGLE,1,2025-01-01,2025-01-05,CONFIRMED,zeljanaasevic@gmail.com,,101,100
-DOUBLE,2,2024-03-21,2024-04-15,COMPLETED,teateirovic@gmail.com,Bazen;Doručak,201,200
+TRIPLE,3,2024-05-27,2024-05-03,COMPLETED,milica.milic@gmail.com,Doručak;Večera,401,1533.0
+TRIPLE,3,2024-06-29,2024-07-05,CONFIRMED,milica.milic@gmail.com,Doručak,401,1470.0
+TRIPLE,2,2024-06-10,2024-06-15,CANCELLED,ana.anic@gmail.com,Teretana,401,1266.0

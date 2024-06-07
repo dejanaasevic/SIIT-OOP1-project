@@ -51,6 +51,7 @@ public class ReservationController {
 	            }
 	            
 	            Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, room, guest);
+	            System.out.println(reservation.getID());
 	            reservation.setReservationStatus(reservationStatus);
 	            reservation.setPrice(price);
 	            

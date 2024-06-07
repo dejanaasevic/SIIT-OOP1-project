@@ -12,6 +12,7 @@ public class ReservationRequest{
 	private LocalDate endDate;
 	private ReservationStatus reservationStatus;
 	private Guest guest;
+	private double price;
 	private List<AdditionalService> additionalServices;
 	
 	public ReservationRequest(RoomType roomType, int numberOfGuests, LocalDate startDate,
@@ -22,12 +23,22 @@ public class ReservationRequest{
 		this.endDate = endDate;
 		this.reservationStatus = ReservationStatus.PENDING;
 		this.guest = guest;
+		this.price = 0;
 		this.additionalServices = new ArrayList<>();
 	}
 	
 	public RoomType getRoomType() {
         return roomType;
     }
+	
+	public double getPrice() {
+		return price;
+	}
+	
+	public void  setPrice(double price) {
+		this.price = price;
+	}
+	
 
     public int getNumberOfGuests() {
         return numberOfGuests;
@@ -116,15 +127,13 @@ public class ReservationRequest{
 		csvString.append(endDate.format(formatter)).append(",");
 		csvString.append(reservationStatus.name()).append(",");
 		csvString.append(guest.getUsername()).append(",");
+		
 
 		for (AdditionalService service : additionalServices) {
 			csvString.append(service.getName()).append(";");
 		}
-
-		if (!additionalServices.isEmpty()) {
-			csvString.deleteCharAt(csvString.length() - 1);
-		}
-
+		csvString.append(",");
+		csvString.append(price);
 		return csvString.toString();
 	}
 

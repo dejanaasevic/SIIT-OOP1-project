@@ -10,6 +10,7 @@ import java.util.Map;
 import entity.AdditionalService;
 import entity.Administrator;
 import entity.Employee;
+import entity.Expense;
 import entity.Guest;
 import entity.Housekeeper;
 import entity.PriceList;
@@ -17,6 +18,7 @@ import entity.Receptionist;
 import entity.Reservation;
 import entity.ReservationRequest;
 import entity.ReservationStatus;
+import entity.Revenue;
 import entity.Room;
 import entity.RoomCleaningRecord;
 import entity.RoomType;
@@ -34,6 +36,8 @@ public class HotelManager {
     private UserManager users;
     private ReservationRequestManager reservationRequests;
     private RoomCleaningRecordManager roomCleaningRecords;
+    private ExpenseManager expenses;
+    private RevenueManager revenues;
 
     public HotelManager() {
     	this.administrators = new AdministratorManager();
@@ -48,6 +52,17 @@ public class HotelManager {
         this.users = new UserManager();
         this.reservationRequests = new ReservationRequestManager();
         this.roomCleaningRecords = new RoomCleaningRecordManager();
+        this.expenses = new ExpenseManager();
+        this.revenues = new RevenueManager();
+    
+    }
+    
+    public ExpenseManager getExpenses() {
+    	return expenses;
+    }
+    
+    public RevenueManager getRevenues() {
+    	return revenues;
     }
 
 	public AdministratorManager getAdministrators() {
@@ -61,7 +76,6 @@ public class HotelManager {
     public GuestManager getGuests() {
         return guests;
     }
-    
     
     public HousekeeperManager getHousekeepers() {
         return housekeepers;
@@ -94,10 +108,64 @@ public class HotelManager {
     public UserManager getUsers() {
         return users;
     }
+    
     public RoomCleaningRecordManager getRoomCleaningRecordManager() {
         return roomCleaningRecords;
     }
+    
+	public String getUserType(String username) {
+		if(administrators.isExists(username)) {
+			return "administrator";
+		}
+		else if (guests.isExists(username)) {
+			return "guest";
+		}
+		else if (housekeepers.isExists(username)) {
+			return "housekeeper";
+		}
+		else if (receptionists.isExists(username)) {
+			return "receptionist";
+		}
+		return null;
+	}
 
+	public boolean validPassword(String username, String password) {
+		String userType = this.getUserType(username);
+		if (userType.equals("administrator")) {
+			Administrator administrator = administrators.FindById(username);
+			if(administrator.getPassword().equals(password)){
+				return true;
+			}
+			return false;
+		}
+		
+		else if (userType.equals("housekeeper")) {
+			Housekeeper housekeeper = housekeepers.FindById(username);
+			if(housekeeper.getPassword().equals(password)) {
+				return true;
+			}
+			return false;
+		}
+		
+		else if (userType.equals("guest")) {
+			Guest guest = guests.FindById(username);
+			if(guest.getPassword().equals(password)) {
+				return true;
+			}
+			return false;
+		}
+		
+		else if (userType.equals("receptionist")) {
+			Receptionist receptionist = receptionists.FindById(username);
+			if(receptionist.getPassword().equals(password)) {
+				return true;
+			}
+			return false;
+		}
+		
+		return false;
+	}
+    
 	public void addAdministrator(Administrator administrator) {
 		if (administrators.add(administrator.getUsername(), administrator)){
 			System.out.printf("Uspešno ste dodali administratora: %s %s\n\n",
@@ -288,58 +356,7 @@ public class HotelManager {
 		
 	}
 	
-	public String getUserType(String username) {
-		if(administrators.isExists(username)) {
-			return "administrator";
-		}
-		else if (guests.isExists(username)) {
-			return "guest";
-		}
-		else if (housekeepers.isExists(username)) {
-			return "housekeeper";
-		}
-		else if (receptionists.isExists(username)) {
-			return "receptionist";
-		}
-		return null;
-	}
 
-	public boolean validPassword(String username, String password) {
-		String userType = this.getUserType(username);
-		if (userType.equals("administrator")) {
-			Administrator administrator = administrators.FindById(username);
-			if(administrator.getPassword().equals(password)){
-				return true;
-			}
-			return false;
-		}
-		
-		else if (userType.equals("housekeeper")) {
-			Housekeeper housekeeper = housekeepers.FindById(username);
-			if(housekeeper.getPassword().equals(password)) {
-				return true;
-			}
-			return false;
-		}
-		
-		else if (userType.equals("guest")) {
-			Guest guest = guests.FindById(username);
-			if(guest.getPassword().equals(password)) {
-				return true;
-			}
-			return false;
-		}
-		
-		else if (userType.equals("receptionist")) {
-			Receptionist receptionist = receptionists.FindById(username);
-			if(receptionist.getPassword().equals(password)) {
-				return true;
-			}
-			return false;
-		}
-		
-		return false;
-	}
 
 	public void updateEmployee(Employee employeeToUpdate) {
 	    String userType = getUserType(employeeToUpdate.getUsername());
@@ -444,12 +461,58 @@ public class HotelManager {
 
 	public PriceList getPriceListByDate(LocalDate date) {
 	    Collection<PriceList> allPriceLists = priceLists.get().values();
+	    
 	    for (PriceList priceList : allPriceLists) {
-	        if (!priceList.getStartDate().isAfter(date) && !priceList.getEndDate().isBefore(date)) {
+	        LocalDate startDate = priceList.getStartDate();
+	        LocalDate endDate = priceList.getEndDate();
+	        
+
+	        if ((startDate.isEqual(date) || startDate.isBefore(date)) && 
+	            (endDate.isEqual(date) || endDate.isAfter(date))) {
 	            return priceList;
 	        }
 	    }
 	    return null;
 	}
 
+
+	public void updateEmployee(Employee employeeToUpdate, Employee employeeCopy) {
+		String userType = getUserType(employeeCopy.getUsername());
+	    if (userType.equals("receptionist")) {
+	    	Receptionist receptionist = (Receptionist)employeeToUpdate;
+	        if (receptionists.update(receptionist.getUsername(), receptionist)) {
+	            System.out.println("Podaci o recepcionistu su uspešno ažurirani.");
+	        } else {
+	            System.out.println("Greška prilikom ažuriranja podataka o recepcionistu.");
+	        }
+	    }
+	    
+	    if (userType.equals("housekeeper")) {
+	    	Housekeeper housekeeper = (Housekeeper)employeeToUpdate;
+	        if (housekeepers.update(housekeeper.getUsername(), housekeeper)) {
+	            System.out.println("Podaci o sobarici su uspešno ažurirani.");
+	        } else {
+	            System.out.println("Greška prilikom ažuriranja podataka o sobarici.");
+	        }
+	    }
+	}
+
+	public PriceList getPriceListByDates(LocalDate startDate, LocalDate endDate) {
+	    for (PriceList priceList : priceLists.get().values()) {
+	        LocalDate priceListStartDate = priceList.getStartDate();
+	        LocalDate priceListEndDate = priceList.getEndDate();
+	        if (!startDate.isAfter(priceListEndDate) && !endDate.isBefore(priceListStartDate)) {
+	            return priceList;
+	        }
+	    }
+	    return null; 
+	}
+
+	public void addRevenue(Revenue revenue) {
+		revenues.addRevenue(revenue);
+	}
+		
+	public void addExpense(Expense expense) {
+		expenses.addExpense(expense);
+	}
 }
