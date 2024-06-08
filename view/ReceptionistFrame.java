@@ -295,17 +295,58 @@ public class ReceptionistFrame extends JFrame {
 	}
 	
 	protected void addNewGuest() {
-	    String name = JOptionPane.showInputDialog("Unesite ime:");
-	    String surname = JOptionPane.showInputDialog("Unesite prezime:");
-	    String genderStr = JOptionPane.showInputDialog("Unesite pol (M/Ž):");
-	    Gender gender = genderStr.equalsIgnoreCase("M") ? Gender.MALE : Gender.FEMALE;
+		String name = JOptionPane.showInputDialog("Unesite ime:");
+		if (name == null || name.trim().isEmpty()) {
+		    JOptionPane.showMessageDialog(null, "Ime ne sme biti prazno.");
+		    return;
+		}
+		String surname = JOptionPane.showInputDialog("Unesite prezime:");
+		if (surname == null || surname.trim().isEmpty()) {
+		    JOptionPane.showMessageDialog(null, "Prezime ne sme biti prazno.");
+		    return;
+		}
+		String genderStr = JOptionPane.showInputDialog("Unesite pol (M/Ž):");
+		if (genderStr == null || genderStr.trim().isEmpty() || (!genderStr.equalsIgnoreCase("M") && !genderStr.equalsIgnoreCase("Ž"))) {
+		    JOptionPane.showMessageDialog(null, "Pol mora biti unesen i treba biti označen sa M ili Ž.");
+		    return;
+		}
+
+		Gender gender = genderStr.equalsIgnoreCase("M") ? Gender.MALE : Gender.FEMALE;
+
 	    String dateOfBirthStr = JOptionPane.showInputDialog("Unesite datum rođenja (dd.MM.yyyy.):");
+	    if(dateOfBirthStr == null || dateOfBirthStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum rođenja nije unesen.");
+		    return;
+	    }
 	    LocalDate dateOfBirth = LocalDate.parse(dateOfBirthStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 	    String phoneNumber = JOptionPane.showInputDialog("Unesite broj telefona:");
+	    if(phoneNumber == null || phoneNumber.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Broj telefona nije unesen.");
+		    return;
+	    }
 	    String address = JOptionPane.showInputDialog("Unesite adresu:");
+	    if (address == null || address.trim().isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "Adresa nije unesena.");
+	        return;
+	    } else if (address.contains(",")) {
+	        JOptionPane.showMessageDialog(null, "Adresa ne sme sadržati zarez.");
+	        return;
+	    }
+
 	    String username = JOptionPane.showInputDialog("Unesite email adresu:");
+	    if (username == null || username.trim().isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "Email adresa nije unesena.");
+	        return;
+	    } 
+	    else if (!address.contains("@")) {
+	        JOptionPane.showMessageDialog(null, "Adresa mora da sadrži @.");
+	        return;
+	    }
 	    String password = JOptionPane.showInputDialog("Unesite broj pasoša:");
-	    
+	    if (password == null || password.trim().isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "Broj pasoša nije unesena.");
+	        return;
+	    }
 	    Guest newGuest = new Guest(name, surname, gender, dateOfBirth, phoneNumber, address, username, password);
 	    
 	    if (hotelManager.getGuests().FindById(username) != null) {
@@ -578,9 +619,22 @@ public class ReceptionistFrame extends JFrame {
 	private void createNewReservation(Guest guest) {
 		 try {
 		        String startDateStr = JOptionPane.showInputDialog("Unesite datum početka rezervacije (dd.MM.yyyy.):");
+		        if(startDateStr != null && startDateStr.trim().isEmpty()) {
+		            JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		            return;
+		        }
 		        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 		        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja rezervacije (dd.MM.yyyy.):");
+		        if(endDateStr != null && endDateStr.trim().isEmpty()) {
+		            JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		            return;
+		        }
 		        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+		        if(startDate.isAfter(endDate)) {
+		            JOptionPane.showMessageDialog(null, "Datum dolaska ne može biti poslije datuma odlaska.");
+		            return;
+		        }
+
 		        if (guest == null) {
 		            JOptionPane.showMessageDialog(null, "Ne postoji gost sa tim korisničkim imenom.", "Greška", JOptionPane.ERROR_MESSAGE);
 		            return;
@@ -625,8 +679,16 @@ public class ReceptionistFrame extends JFrame {
 
 		            if (selectedRoom != null && availableRooms.contains(selectedRoom)) {
 		                String numberOfGuestsStr = JOptionPane.showInputDialog("Unesite broj gostiju:");
-		                int numberOfGuests = Integer.parseInt(numberOfGuestsStr);
+		                if(numberOfGuestsStr == null || numberOfGuestsStr.trim().isEmpty()) {
+		                    JOptionPane.showMessageDialog(null, "Broj gostiju nije unesen.");
+		                    return;
+		                }
 
+		                int numberOfGuests = Integer.parseInt(numberOfGuestsStr);
+		                if(numberOfGuests < 0) {
+		                    JOptionPane.showMessageDialog(null, "Broj gostiju ne može biti negativan.");
+		                    return;
+		                }
 		                Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, selectedRoom, guest);
 		                List<String> additionalServicesOptions = new ArrayList<>();
 		                for (String additionalService : hotelManager.getAdditionalServices().get().keySet()) {
@@ -689,16 +751,55 @@ public class ReceptionistFrame extends JFrame {
 	        Guest guest = hotelManager.getGuests().FindById(username);
 
 	        if (guest == null) {
-	            String name = JOptionPane.showInputDialog("Unesite ime:");
-	            String surname = JOptionPane.showInputDialog("Unesite prezime:");
-	            String genderStr = JOptionPane.showInputDialog("Unesite pol (M/F):");
+	        	String name = JOptionPane.showInputDialog("Unesite ime:");
+	        	if(name == null || name.trim().isEmpty()) {
+	        	    JOptionPane.showMessageDialog(null, "Ime nije uneseno.");
+	        	    return;
+	        	}
+
+	        	String surname = JOptionPane.showInputDialog("Unesite prezime:");
+	        	if(surname == null || surname.trim().isEmpty()) {
+	        	    JOptionPane.showMessageDialog(null, "Prezime nije uneseno.");
+	        	    return;
+	        	}
+
+	        	String genderStr = JOptionPane.showInputDialog("Unesite pol (M/Ž):");
+	        	if(genderStr == null || genderStr.trim().isEmpty()) {
+	        	    JOptionPane.showMessageDialog(null, "Pol nije unesen.");
+	        	    return;
+	        	}
+
+	        	if(!genderStr.trim().equalsIgnoreCase("m") && !genderStr.trim().equalsIgnoreCase("Ž")) {
+	        	    JOptionPane.showMessageDialog(null, "Molimo unesite 'M' za muško ili 'Ž' za žensko.");
+	        	}
+
 	            Gender gender = genderStr.equalsIgnoreCase("M") ? Gender.MALE : Gender.FEMALE;
 	            String dateOfBirthStr = JOptionPane.showInputDialog("Unesite datum rođenja (dd.MM.yyyy.):");
+	            if(dateOfBirthStr == null || dateOfBirthStr.trim().isEmpty()) {
+	        	    JOptionPane.showMessageDialog(null, "Molimo unesite datum rođenja");
+	        	    return;
+	        	}
 	            LocalDate dateOfBirth = LocalDate.parse(dateOfBirthStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 	            String phoneNumber = JOptionPane.showInputDialog("Unesite broj telefona:");
+	            if(phoneNumber == null || phoneNumber.trim().isEmpty()) {
+	        	    JOptionPane.showMessageDialog(null, "Molimo unesite broj telefona");
+	        	    return;
+	        	}
 	            String address = JOptionPane.showInputDialog("Unesite adresu:");
-	            String passportNumber = JOptionPane.showInputDialog("Unesite broj pasoša:");
+	            if(address == null || address.trim().isEmpty()) {
+	                JOptionPane.showMessageDialog(null, "Molimo unesite adresu.");
+	                return;
+	            }
 
+	            if(address.contains(",")) {
+	                JOptionPane.showMessageDialog(null, "Adresa ne sme sadržati zarez.");
+	                return;
+	            }
+	            String passportNumber = JOptionPane.showInputDialog("Unesite broj pasoša:");
+	            if(passportNumber == null || passportNumber.trim().isEmpty()) {
+	        	    JOptionPane.showMessageDialog(null, "Molimo unesite broj pasoša");
+	        	    return;
+	        	}
 	            Guest newGuest = new Guest(name, surname, gender, dateOfBirth, phoneNumber, address, username, passportNumber);
 
 	            if (hotelManager.getGuests().FindById(username) != null) {
@@ -839,11 +940,8 @@ public class ReceptionistFrame extends JFrame {
 	                            	LocalDate today = LocalDate.now();
 	        			            Revenue revenue = new Revenue(guest,reservation.getRoomType(),today, price-oldPrice);
 	        			            hotelManager.addRevenue(revenue);
-	        				        hotelController.addRevenue(revenue);
-	                            	
-	                            }
-	                            
-	                            
+	        				        hotelController.addRevenue(revenue);	
+	                            }               
 	                            reservation.setPrice(price);
 	                            hotelController.updateReservation(reservation.getStartDate(), reservation.getEndDate(), reservation.getRoom().getRoomNumber(), reservation);
 	                            JOptionPane.showMessageDialog(null, "Gost je uspešno prijavljen za rezervaciju: " + selectedReservationStr, "Uspeh", JOptionPane.INFORMATION_MESSAGE);

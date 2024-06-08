@@ -188,10 +188,21 @@ public class GuestFrame extends JFrame {
 	protected void addreservationRequests() {
 	    try {
 	    	String startDateStr = JOptionPane.showInputDialog("Unesite datum dolaska (dd.MM.yyyy.):");
+	    	if(startDateStr == null || startDateStr.trim().isEmpty()) {
+	    	    JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+	    	    return;
+	    	}
 	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 	        String endDateStr = JOptionPane.showInputDialog("Unesite datum odlaska (dd.MM.yyyy.):");
+	        if(endDateStr == null || endDateStr.trim().isEmpty()) {
+	    	    JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+	    	    return;
+	    	}
 	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
-	        
+	        if(endDate.isBefore(startDate)) {
+	            JOptionPane.showMessageDialog(null, "Datum odlaska ne može biti pre datuma dolaska.");
+	            return;
+	        }
 	        List<String> roomTypesList = hotelManager.getAvailableRoomTypes(startDate, endDate);
 	        String[] roomTypes = new String [roomTypesList.size()];
 	        for(int i = 0; i<roomTypesList.size(); i++ ) {
@@ -202,6 +213,10 @@ public class GuestFrame extends JFrame {
 	        RoomType roomType = RoomType.valueOf(roomTypeStr);
 	        
 	        int numberOfGuests = Integer.parseInt(JOptionPane.showInputDialog("Unesite broj gostiju:"));
+	        if(numberOfGuests < 0) {
+	            JOptionPane.showMessageDialog(null, "Broj gostiju ne može biti manji od nula.");
+	            return;
+	        }
 
 	        Guest currentGuest = hotelManager.getGuests().FindById(username);
 	        
@@ -209,7 +224,6 @@ public class GuestFrame extends JFrame {
 	            JOptionPane.showMessageDialog(null, "Nema prijavljenog korisnika. Molimo prijavite se pre kreiranja rezervacije.");
 	            return;
 	        }
-
 	        ReservationRequest reservationRequest = new ReservationRequest(roomType, numberOfGuests, startDate, endDate, currentGuest);
 	        
 	        List<String> additionalServicesOptions = new ArrayList<>();
@@ -235,7 +249,6 @@ public class GuestFrame extends JFrame {
                         JOptionPane.showMessageDialog(null, "Dodatna usluga sa navedenim nazivom nije pronađena.");
                     }
                 }
-
                 addMoreServices = JOptionPane.showConfirmDialog(null, "Želite li da dodate još neku dodatnu uslugu?", "Dodavanje dodatnih usluga", JOptionPane.YES_NO_OPTION);
             }
 	        double price =  calculateReservationRequestPrice(reservationRequest);

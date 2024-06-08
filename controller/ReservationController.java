@@ -132,9 +132,9 @@ public class ReservationController {
 	            String csvStartDate = data[2];
 	            String csvEndDate = data[3];
 	            String csvRoomStr = data[7];
-	            double price = Double.parseDouble(data[8].trim());
+
 	            if (csvStartDate.equals(startDate.toString())
-	            		&& csvEndDate.equals(endDate.toString()) && csvRoomStr.equals(roomStr) && price == reservation.getPrice()) {
+	                && csvEndDate.equals(endDate.toString()) && csvRoomStr.equals(roomStr)) {
 	                lines.add(reservation.toCSVString());
 	                isUpdated = true;
 	            } else {
@@ -145,7 +145,6 @@ public class ReservationController {
 	        e.printStackTrace();
 	        return false;
 	    }
-
 	    if (isUpdated) {
 	        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename)))) {
 	            for (String updatedLine : lines) {
@@ -159,6 +158,7 @@ public class ReservationController {
 	    }
 	    return false;
 	}
+
 
 	public void checkAndRejectExpiredReservations() {
 		LocalDate today = LocalDate.now();
