@@ -65,9 +65,9 @@ public class GuestFrame extends JFrame {
 
 	    JMenu reservationRequestMenu = new JMenu("Zahtev Rezervacije");
 	     menuBar.add(reservationRequestMenu);
-	    JMenuItem showreservationRequests = new JMenuItem("Pregledaj sve zahteve rezervacija");  //oky
+	    JMenuItem showreservationRequests = new JMenuItem("Pregledaj sve zahteve rezervacija");  
 	    reservationRequestMenu.add(showreservationRequests);
-	    JMenuItem addreservationRequests = new JMenuItem("Dodaj novi zahtev rezervacije");  //oky
+	    JMenuItem addreservationRequests = new JMenuItem("Dodaj novi zahtev rezervacije");  
 	    reservationRequestMenu.add(addreservationRequests);
 	    //JMenuItem updatereservationRequests = new JMenuItem("Izmeni zahtev rezervacije");
 	    //reservationRequestMenu.add(updatereservationRequests);
@@ -76,16 +76,21 @@ public class GuestFrame extends JFrame {
 
 	    JMenu reservationMenu = new JMenu("Rezervacije");
 	    menuBar.add(reservationMenu);
-	    JMenuItem showReservation = new JMenuItem("Prikaz svih rezervacija"); //oky
+	    JMenuItem showReservation = new JMenuItem("Prikaz svih rezervacija"); 
 	    reservationMenu.add(showReservation);
-	    JMenuItem cancelReservation = new JMenuItem("Otkaži rezervaciju"); //oky
+	    JMenuItem cancelReservation = new JMenuItem("Otkaži rezervaciju"); 
 	    reservationMenu.add(cancelReservation);
+	    
+	    JMenu reportMenu = new JMenu("Izveštaji");
+	    menuBar.add(reportMenu);
+	    JMenuItem reservationReport = new JMenuItem("Statusi i troškovi rezervacije"); 
+	    reportMenu.add(reservationReport);
 	    
 	    JMenu settingsMenu = new JMenu("Postavke");
 	    menuBar.add(settingsMenu);
 	    JMenuItem changePassword = new JMenuItem("Promena lozinke");
 	    settingsMenu.add(changePassword);
-	    JMenuItem signOut = new JMenuItem("Odjava iz sistema"); //oky
+	    JMenuItem signOut = new JMenuItem("Odjava iz sistema"); 
 	    settingsMenu.add(signOut);
 
 
@@ -116,6 +121,12 @@ public class GuestFrame extends JFrame {
 	    signOut.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
 	    		signOut();
+	       }
+	    });
+	    
+	    reservationReport.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    		reservationReport();
 	       }
 	    });
 	}
@@ -462,5 +473,74 @@ public class GuestFrame extends JFrame {
 	        );
 	    }
 	    showUserReservations();
+	}
+	
+	protected void reservationReport() {
+		// Gost vidi sve svoje rezervacije i njihove statuse, troškove za svaku rezervaciju (imati na
+		//umu da nema troškova na rezervacije koje su odbijene od strane hotela) i ukupan trošak
+		//za sve rezervacije
+		
+		// rezervacije,status rezervacija, troskovi ukupan trosak za sve rezervacije
+		// tabela --> start date, end date, tip, trosak, ukupan trosak kao dialog
+		
+		Map<String, Reservation> reservationMap = hotelManager.getReservations().get();
+		List<ReservationRequest> reservationRequests = hotelManager.getReservationRequests().getReservationRequests();
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
+		String[] columnNames = {
+				"Tip","Datum početka", "Datum kraja","Tip sobe", "Status", "Trošak"
+		};
+		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+		@Override
+		public boolean isCellEditable(int row, int column) {
+			return false; 
+		    }
+		};
+		
+		double totalPrice = 0;
+		for (Reservation reservation : reservationMap.values()) {
+			if (reservation.getGuest().getUsername().equals(this.username)) {
+				totalPrice +=  reservation.getTotalPrice();
+		        Object[] row = {
+		            "Rezervacija",
+		        	reservation.getStartDate().format(formatter),
+		            reservation.getEndDate().format(formatter),
+		            reservation.getRoomType(),
+		            reservation.getReservationStatus(),
+		            reservation.getTotalPrice()
+		         };
+		         tableModel.addRow(row);
+		     }
+		 }
+		
+		for (ReservationRequest reservationRequest : reservationRequests) {
+			if (reservationRequest.getGuest().getUsername().equals(this.username)) {
+				double price = reservationRequest.getPrice();
+				if (reservationRequest.getReservationStatus().equals(ReservationStatus.REJECTED)) {
+					price = 0;
+				}
+				totalPrice +=  price;
+		        Object[] row = {
+		            "Zahtev rezervacije",
+		            reservationRequest.getStartDate().format(formatter),
+		            reservationRequest.getEndDate().format(formatter),
+		            reservationRequest.getRoomType(),
+		            reservationRequest.getReservationStatus(),
+		            price
+		         };
+		         tableModel.addRow(row);
+		     }
+		 }
+		 JTable table = new JTable(tableModel);
+		 JScrollPane scrollPane = new JScrollPane(table);
+		 scrollPane.setBounds(30, 30, 1400, 900); 
+		 contentPane.removeAll(); 
+		 contentPane.setLayout(new BorderLayout()); 
+		 contentPane.add(scrollPane, BorderLayout.CENTER);
+		 contentPane.revalidate();
+		 contentPane.repaint();
+		 
+		 String message = String.format("Ukupan trošak za sve rezervacije: %.2f\n", totalPrice);
+		 JOptionPane.showMessageDialog(contentPane, message, "Rezultat analize", JOptionPane.INFORMATION_MESSAGE);
 	}
 }

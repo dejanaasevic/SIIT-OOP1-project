@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,7 @@ import entity.ReservationRequest;
 import entity.ReservationStatus;
 import entity.Revenue;
 import entity.Room;
+import entity.RoomCleaningRecord;
 import entity.RoomStatus;
 import entity.RoomType;
 import manager.HotelManager;
@@ -150,8 +152,14 @@ public class AdministratorFrame extends JFrame {
         reportMenu.add(incomeExpenses);
         JMenuItem occupancyRoom = new JMenuItem("Zauzetost soba"); 
         reportMenu.add(occupancyRoom);
-        JMenuItem analysisOfFinancialReports = new JMenuItem("Analiza finansijskih izveštaja");
-        reportMenu.add(analysisOfFinancialReports);
+        JMenuItem roomsPerHousekeeper = new JMenuItem("Broj očišćenih soba po sobarici"); 
+        reportMenu.add(roomsPerHousekeeper);
+        JMenuItem countReservationsByStaus = new JMenuItem("Broj rezervacija po statusu"); 
+        reportMenu.add(countReservationsByStaus);
+        JMenuItem numberOfNightsAndRoomIncome = new JMenuItem("Broj noćenja i prihodi sobe"); 
+        reportMenu.add(numberOfNightsAndRoomIncome);
+        //JMenuItem analysisOfFinancialReports = new JMenuItem("Analiza finansijskih izveštaja");
+        //reportMenu.add(analysisOfFinancialReports);
         
         JMenu settingsMenu = new JMenu("Postavke");
         menuBar.add(settingsMenu);
@@ -327,8 +335,26 @@ public class AdministratorFrame extends JFrame {
              }
          });
         
+        roomsPerHousekeeper.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	roomsPerHousekeeper();
+             }
+         });
+        
+        countReservationsByStaus.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	countReservationsByStaus();
+             }
+         });
+        
+        numberOfNightsAndRoomIncome.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	numberOfNightsAndRoomIncome();
+             }
+         });
+        
     }
-  
+
 	protected void signOut() {
 		MainFrame mainFrame = new MainFrame();
 		mainFrame.setVisible(true);
@@ -337,8 +363,16 @@ public class AdministratorFrame extends JFrame {
 
 	protected void incomeExpenses() {
 	    String startDateStr = JOptionPane.showInputDialog("Unesite datum početka analize (dd.MM.yyyy.):");
+	    if(startDateStr == null || startDateStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		    return;
+	    }
 	    LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 	    String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja analize (dd.MM.yyyy.):");
+	    if(endDateStr == null || endDateStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		    return;
+	    }
 	    LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 
 	    Period period = Period.between(startDate, endDate);
@@ -422,6 +456,156 @@ public class AdministratorFrame extends JFrame {
 	    String message = String.format("Prihodi: %.2f\nRashodi: %.2f\nNeto prihod: %.2f\n\nMesečni prihodi: %.2f\nMesečni rashodi: %.2f\n\nUkupno plate: %.2f", 
 	                                    income, outcome + totalSalaryOutcome, netIncome, monthlyIncome, monthlyOutcome, totalSalaryOutcome);
 	    JOptionPane.showMessageDialog(contentPane, message, "Rezultat analize", JOptionPane.INFORMATION_MESSAGE);
+	}
+	
+	protected void roomsPerHousekeeper() {
+	    String startDateStr = JOptionPane.showInputDialog("Unesite datum početka analize (dd.MM.yyyy.):");
+	    if(startDateStr == null || startDateStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		    return;
+	    }
+	    LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	    String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja analize (dd.MM.yyyy.):");
+	    if(endDateStr == null || endDateStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		    return;
+	    }
+	    LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	    
+	    Map<String, RoomCleaningRecord> cleaningRecordsMap = hotelManager.getRoomCleaningRecordManager().get();
+	    Map<String, Integer> roomPerHousekeeper = new HashMap<>();
+	    
+	    for (Housekeeper housekeeper : hotelManager.getHousekeepers().get().values()) {
+	        roomPerHousekeeper.put(housekeeper.getUsername(), 0);
+	    }
+
+	    boolean recordsFound = false;
+	    
+	    for (RoomCleaningRecord cleaningRecord : cleaningRecordsMap.values()) {
+	        LocalDate cleaningDate = cleaningRecord.getDate();
+	        if ((cleaningDate.isEqual(startDate) || cleaningDate.isEqual(endDate) ||
+	             (cleaningDate.isAfter(startDate) && cleaningDate.isBefore(endDate)))) {
+	            recordsFound = true;
+	            String housekeeperUsername = cleaningRecord.getHousekeeper().getUsername();
+	            int housekeeperCleanedRoom = roomPerHousekeeper.get(housekeeperUsername) + 1;
+	            roomPerHousekeeper.put(housekeeperUsername, housekeeperCleanedRoom);
+	        }
+	    }
+
+	    if (!recordsFound) {
+	        JOptionPane.showMessageDialog(null, "Nema podataka o čišćenju soba za odabrani period.", "Obaveštenje", JOptionPane.INFORMATION_MESSAGE);
+	        return;
+	    }
+	    
+	    String[] columnNames = { "Sobarica", "Broj soba" };
+	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+	        @Override
+	        public boolean isCellEditable(int row, int column) {
+	            return false; 
+	        }
+	    };
+	    
+	    for (String housekeeperUsername : roomPerHousekeeper.keySet()) {
+	        int numberOfCleanedRooms = roomPerHousekeeper.get(housekeeperUsername);
+	        Object[] row = { housekeeperUsername, numberOfCleanedRooms };
+	        tableModel.addRow(row);
+	    }
+
+	     JTable table = new JTable(tableModel);
+	     JScrollPane scrollPane = new JScrollPane(table);
+
+	     contentPane.removeAll();
+	     contentPane.add(scrollPane, BorderLayout.CENTER);
+	     contentPane.revalidate();
+	     contentPane.repaint();
+	}
+	
+	protected void countReservationsByStaus() {
+		String startDateStr = JOptionPane.showInputDialog("Unesite datum početka analize (dd.MM.yyyy.):");
+	    if(startDateStr == null || startDateStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		    return;
+	    }
+	    LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	    String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja analize (dd.MM.yyyy.):");
+	    if(endDateStr == null || endDateStr.trim().isEmpty()) {
+	    	JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+		    return;
+	    }
+	    LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	    
+	    Map<String, Reservation> reservationMap = hotelManager.getReservations().get();
+	    List<ReservationRequest> ReservationRequestList = hotelManager.getReservationRequests().getReservationRequests();
+	    Map<ReservationStatus, Integer> countReservationsStatus = new HashMap<>();
+	    
+	    countReservationsStatus.put(ReservationStatus.CONFIRMED, 0);
+	    countReservationsStatus.put(ReservationStatus.CANCELLED, 0);
+	    countReservationsStatus.put(ReservationStatus.REJECTED, 0);
+	    boolean reservationFound = false;
+	    boolean reservationRequestFound = false;
+	    
+	    for (Reservation reservation : reservationMap.values()) {
+	    	reservationFound = true;
+	        if (reservation.getReservationStatus() == ReservationStatus.CONFIRMED &&
+	                ((reservation.getStartDate().isEqual(startDate) || reservation.getStartDate().isAfter(startDate)) &&
+	                 (reservation.getEndDate().isEqual(endDate) || reservation.getEndDate().isBefore(endDate)))) {
+	        		  int statusCount  = countReservationsStatus.get(ReservationStatus.CONFIRMED)+1;
+	        		  countReservationsStatus.put(ReservationStatus.CONFIRMED, statusCount);
+	        }
+	        else if (reservation.getReservationStatus() == ReservationStatus.ACTIVE &&
+	                ((reservation.getStartDate().isEqual(startDate) || reservation.getStartDate().isAfter(startDate)) &&
+	                 (reservation.getEndDate().isEqual(endDate) || reservation.getEndDate().isBefore(endDate)))) {
+	        		  int statusCount  = countReservationsStatus.get(ReservationStatus.CONFIRMED)+1;
+	        		  countReservationsStatus.put(ReservationStatus.CONFIRMED, statusCount);
+	        }
+	        
+	        else if (reservation.getReservationStatus() == ReservationStatus.CANCELLED &&
+	                ((reservation.getStartDate().isEqual(startDate) || reservation.getStartDate().isAfter(startDate)) &&
+	                 (reservation.getEndDate().isEqual(endDate) || reservation.getEndDate().isBefore(endDate)))) {
+	        		  int statusCount  = countReservationsStatus.get(ReservationStatus.CANCELLED)+1;
+	        		  countReservationsStatus.put(ReservationStatus.CANCELLED , statusCount);
+	        }
+	    }
+	    
+	    for (ReservationRequest reservationRequest : ReservationRequestList) {
+	    	reservationRequestFound = true;
+	    	 if (reservationRequest.getReservationStatus() == ReservationStatus.REJECTED &&
+		                ((reservationRequest.getStartDate().isEqual(startDate) || reservationRequest.getStartDate().isAfter(startDate)) &&
+		                 (reservationRequest.getEndDate().isEqual(endDate) || reservationRequest.getEndDate().isBefore(endDate)))) {
+		        		  int statusCount  = countReservationsStatus.get(ReservationStatus.REJECTED)+1;
+		        		  countReservationsStatus.put(ReservationStatus.REJECTED, statusCount);
+		        }
+	    }
+	    
+	    
+	    
+	    if (!reservationRequestFound && !reservationFound) {
+	        JOptionPane.showMessageDialog(null, "Nema podataka o rezervacijama.", "Obaveštenje", JOptionPane.INFORMATION_MESSAGE);
+	        return;
+	    }
+	    	    
+	    String[] columnNames = { "Status", "Broj rezervacija" };
+	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+	        @Override
+	        public boolean isCellEditable(int row, int column) {
+	            return false; 
+	        }
+	    };
+	    
+	    for (ReservationStatus reservationStatus : countReservationsStatus.keySet()) {
+	        int statusCount = countReservationsStatus.get(reservationStatus);
+	        Object[] row = { reservationStatus, statusCount};
+	        tableModel.addRow(row);
+	    }
+
+	     JTable table = new JTable(tableModel);
+	     JScrollPane scrollPane = new JScrollPane(table);
+
+	     contentPane.removeAll();
+	     contentPane.add(scrollPane, BorderLayout.CENTER);
+	     contentPane.revalidate();
+	     contentPane.repaint();
+	    
 	}
 
 	private void displayAllEmployees() {
@@ -1513,6 +1697,72 @@ public class AdministratorFrame extends JFrame {
 	        Object[] row = {
 	            room.getRoomNumber(),
 	            room.getRoomStatus()
+	        };
+	        tableModel.addRow(row);
+	    }
+	    JTable table = new JTable(tableModel);
+	    JScrollPane scrollPane = new JScrollPane(table);
+
+	    contentPane.removeAll();
+	    contentPane.add(scrollPane, BorderLayout.CENTER);
+	    contentPane.revalidate();
+	    contentPane.repaint();
+	}
+	
+	protected void numberOfNightsAndRoomIncome() {
+	    String startDateStr = JOptionPane.showInputDialog("Unesite datum početka analize (dd.MM.yyyy.):");
+	    if (startDateStr == null || startDateStr.trim().isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+	        return;
+	    }
+	    LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	    String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja analize (dd.MM.yyyy.):");
+	    if (endDateStr == null || endDateStr.trim().isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "Datum nije unesen.");
+	        return;
+	    }
+	    LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+
+	    if (startDate.isAfter(endDate)) {
+	        JOptionPane.showMessageDialog(contentPane, "Početni datum mora biti pre krajnjeg datuma.", "Greška", JOptionPane.ERROR_MESSAGE);
+	        return;
+	    }
+
+	    Map<String, Room> rooms = hotelManager.getRooms().get();
+	    Map<String, Reservation> reservations = hotelManager.getReservations().get();
+	    if (rooms.isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "Trenutno nema zauzetih soba", "Poruka", JOptionPane.INFORMATION_MESSAGE);
+	        return;
+	    }
+
+	    String[] columnNames = {
+	        "Broj sobe", "Tip sobe", "Broj noćenja", "Prihodi"
+	    };
+
+	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+	        @Override
+	        public boolean isCellEditable(int row, int column) {
+	            return false;
+	        }
+	    };
+
+	    for (Room room : rooms.values()) {
+	        int roomNumberOfNights = 0;
+	        int roomIncome = 0;
+	        for (Reservation reservation : reservations.values()) {
+	            if (reservation.getRoom().getRoomNumber().equals(room.getRoomNumber())
+	                    && (reservation.getStartDate().isEqual(startDate) || reservation.getStartDate().isAfter(startDate))
+	                    && (reservation.getEndDate().isEqual(endDate) || reservation.getEndDate().isBefore(endDate))) {
+	                int daysBetween = Period.between(reservation.getEndDate(), reservation.getStartDate()).getDays();
+	                roomNumberOfNights += daysBetween;
+	                roomIncome += reservation.getPrice();
+	            }
+	        }
+	        Object[] row = {
+	            room.getRoomNumber(),
+	            room.getRoomType(),
+	            roomNumberOfNights,
+	            roomIncome
 	        };
 	        tableModel.addRow(row);
 	    }
