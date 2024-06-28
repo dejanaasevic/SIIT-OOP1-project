@@ -1,1 +1,5 @@
-TRIPLE,3,2024-05-27,2024-05-03,ACTIVE,milica.milic@gmail.com,Doručak;Večera;Bazen,401,1233.0
+TRIPLE,1,2024-06-27,2024-06-30,COMPLETED,milica.milic@gmail.com,Doručak;Večera;Bazen;Ručak,Klima uređaj;Balkon;Sef,401,928.0,2024-06-01
+TRIPLE,1,2024-11-11,2024-11-20,COMPLETED,ana.anic@gmail.com,Doručak,Klima uređaj;Sef;Mini-bar,402,2100.0,2024-05-11
+DOUBLE,1,2024-08-29,2024-09-01,COMPLETED,milica.milic@gmail.com,Doručak;Bazen,Klima uređaj;TV,202,664.0,2024-06-15
+SINGLE,1,2024-06-27,2024-06-30,COMPLETED,vanja.bakic@gmail.com,Doručak,Mini-bar,403,440.0,2024-06-20
+SINGLE,1,2024-12-20,2024-12-25,CONFIRMED,ana.anic@gmail.com,Teretana,Sef;Mini-bar,403,666.0,2024-06-19

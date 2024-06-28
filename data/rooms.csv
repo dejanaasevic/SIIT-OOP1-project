@@ -1,5 +1,11 @@
-101,SINGLE,VACANT
-201,DOUBLE,VACANT
-301,TWIN,VACANT
-401,TRIPLE,VACANT
-102,SINGLE,VACANT
+101,SINGLE,VACANT,Klima uređaj;Balkon;TV;Ne-pušačka
+201,DOUBLE,VACANT,Klima uređaj;TV;Pušačka
+301,TWIN,VACANT,Balkon;Ne-pušačka;TV
+401,TRIPLE,VACANT,Klima uređaj; Balkon; TV
+102,SINGLE,VACANT,TV;Ne-pušačka
+202,DOUBLE,VACANT,Klima uređaj;TV;Mini-bar;Ne-pušačka
+302,TWIN,VACANT,Balkon;TV;Sef;Pušačka
+402,TRIPLE,VACANT,Klima uređaj;TV;Balkon;Sef;Mini-bar;Ne-pušačka
+103,SINGLE,VACANT,TV;Sef;Pušačka
+203,DOUBLE,VACANT,Klima uređaj;TV;Balkon;Sef;Pušačka
+403,SINGLE,VACANT,Klima uređaj; TV; Sef; Mini-bar

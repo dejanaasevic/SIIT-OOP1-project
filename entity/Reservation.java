@@ -10,16 +10,18 @@ public class Reservation {
 	private int numberOfGuests;
 	private LocalDate startDate;
 	private LocalDate endDate;
+	private LocalDate creationDate;
 	private ReservationStatus reservationStatus;
 	private Room room;
 	private Guest guest;
 	private List<AdditionalService> additionalServices;
+	private List<String> roomAttributes;
 	private String id;
 	private double totalPrice;
 	
 	public Reservation (RoomType roomType, int numberOfGuests, LocalDate startDate,
 						LocalDate endDate,Room room,
-						Guest guest) {
+						Guest guest, LocalDate creationDate) {
 		this.roomType = roomType;
 		this.numberOfGuests = numberOfGuests;
 		this.startDate = startDate;
@@ -30,6 +32,8 @@ public class Reservation {
 		this.id = generateID();
 		this.totalPrice = 0;
 		this.additionalServices = new ArrayList<>();
+		this.roomAttributes = new ArrayList<>();
+		this.creationDate = creationDate;
 	}
 	
 	public Reservation(ReservationRequest reservationRequest, Room room) {
@@ -43,7 +47,7 @@ public class Reservation {
 		this.id = generateID();
 		this.totalPrice = calculateTotalPrice();
 		this.additionalServices = reservationRequest.getAdditionalServices();
-		
+		this.roomAttributes = reservationRequest.getRoomAttributes();
 	}
 	
 
@@ -67,6 +71,10 @@ public class Reservation {
 		return additionalServices;
 	}
 	
+	public List<String> getRoomAttributes() {
+        return roomAttributes;
+    }
+	
 	public void setRoomType(RoomType roomType) {
 		this.roomType = roomType;
 	}
@@ -87,6 +95,10 @@ public class Reservation {
 		this.endDate = endDate;
 	}
 	
+	public void setCreationDate(LocalDate creationDate){
+		this.creationDate = creationDate;
+	}
+	
 	public void setReservationStatus(ReservationStatus reservationStatus) {
 		this.reservationStatus = reservationStatus;
 	}
@@ -99,6 +111,9 @@ public class Reservation {
 		this.guest = guest;
 	}
 	
+	public void setRoomAttributes(List<String> roomAttributes) {
+        this.roomAttributes = roomAttributes;
+    }
 	
 	public double getPrice() {
 		return this.totalPrice;
@@ -120,6 +135,10 @@ public class Reservation {
 		return this.endDate;
 	}
 	
+	public LocalDate getCreationDate() {
+		return this.creationDate;
+	}
+	
 	public ReservationStatus getReservationStatus() {
 		return this.reservationStatus;
 	}
@@ -139,12 +158,22 @@ public class Reservation {
 		return this.totalPrice;
 	}
 	
+	public void addRoomAttribute(String roomAttribute) {
+        roomAttributes.add(roomAttribute);
+    }
+
+    public void removeRoomAttribute(String roomAttribute) {
+        roomAttributes.remove(roomAttribute);
+    }
+	
 	public String toString() {
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
 	    String additionalServicesString = "";
 	    for (AdditionalService service : additionalServices) {
 	        additionalServicesString += service.getName() + ", ";
 	    }
+	    
+	    String roomAttributesString = String.join(", ", roomAttributes);
 
 	    return "tip sobe: " + roomType.getDescription() + "\n" +
 	            "broj gostiju: " + numberOfGuests + "\n" +
@@ -153,20 +182,31 @@ public class Reservation {
 	            "status rezervacije: " + reservationStatus.getDescription() + "\n" +
 	            "gost: " + guest.getUsername() + "\n" +
 	            "dodatne usluge: " + additionalServicesString + "\n" +
+	            "atributi sobe: " + roomAttributesString + "\n" +
 	            "ID rezervacije: " + id + "\n" +
-	            "ukupna cena: " + totalPrice + "\n";
+	            "ukupna cena: " + totalPrice + "\n" +
+	            "Datum kreiranja:" + creationDate.format(formatter) ;
 	}
 
 	public String toCSVString() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String startDateStr = startDate.format(formatter);
         String endDateStr = endDate.format(formatter);
-        
+        String creationDateStr = creationDate.format(formatter);
+
         StringBuilder servicesString = new StringBuilder();
         for (int i = 0; i < additionalServices.size(); i++) {
             servicesString.append(additionalServices.get(i).getName());
             if (i < additionalServices.size() - 1) {
                 servicesString.append(";");
+            }
+        }
+
+        StringBuilder attributesString = new StringBuilder();
+        for (int i = 0; i < roomAttributes.size(); i++) {
+            attributesString.append(roomAttributes.get(i));
+            if (i < roomAttributes.size() - 1) {
+                attributesString.append(";");
             }
         }
 
@@ -178,8 +218,10 @@ public class Reservation {
             reservationStatus.toString(), 
             guest.getUsername(), 
             servicesString.toString(), 
+            attributesString.toString(), 
             room.getRoomNumber(),
-            String.valueOf(totalPrice)
+            String.valueOf(totalPrice),
+            creationDateStr
         );
     }
 	

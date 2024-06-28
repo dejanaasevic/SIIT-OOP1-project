@@ -1,11 +1,9 @@
 package view;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -14,7 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -27,6 +27,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import org.knowm.xchart.CategoryChart;
+import org.knowm.xchart.CategoryChartBuilder;
+import org.knowm.xchart.PieChart;
+import org.knowm.xchart.PieChartBuilder;
+import org.knowm.xchart.XChartPanel;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.style.PieStyler;
+import org.knowm.xchart.style.Styler;
 
 import controller.HotelController;
 import entity.AdditionalService;
@@ -47,6 +57,8 @@ import entity.RoomCleaningRecord;
 import entity.RoomStatus;
 import entity.RoomType;
 import manager.HotelManager;
+
+
 
 public class AdministratorFrame extends JFrame {
 
@@ -158,8 +170,12 @@ public class AdministratorFrame extends JFrame {
         reportMenu.add(countReservationsByStaus);
         JMenuItem numberOfNightsAndRoomIncome = new JMenuItem("Broj noćenja i prihodi sobe"); 
         reportMenu.add(numberOfNightsAndRoomIncome);
-        //JMenuItem analysisOfFinancialReports = new JMenuItem("Analiza finansijskih izveštaja");
-        //reportMenu.add(analysisOfFinancialReports);
+        JMenuItem incomeByRoomTypeChart = new JMenuItem("Prihod po tipu sobe prethodnih godinu dana");
+        reportMenu.add(incomeByRoomTypeChart);
+        JMenuItem roomsPerHousekeeperChart = new JMenuItem("Opterećenje sobarica prethodnih 30 dana");
+        reportMenu.add(roomsPerHousekeeperChart);
+        JMenuItem reservationStatusChart = new JMenuItem("Status rezervacija prethodnih 30 dana");
+        reportMenu.add(reservationStatusChart);
         
         JMenu settingsMenu = new JMenu("Postavke");
         menuBar.add(settingsMenu);
@@ -350,6 +366,24 @@ public class AdministratorFrame extends JFrame {
         numberOfNightsAndRoomIncome.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             	numberOfNightsAndRoomIncome();
+             }
+         });
+        
+        incomeByRoomTypeChart.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	incomeByRoomTypeChart();
+             }
+         });
+        
+        roomsPerHousekeeperChart.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	roomsPerHousekeeperChart();
+             }
+         });
+        
+        reservationStatusChart.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	reservationStatusChart();
              }
          });
         
@@ -1033,37 +1067,40 @@ public class AdministratorFrame extends JFrame {
 	}
     
     protected void showRooms() {
-	    Map<String, Room> roomMap = hotelManager.getRooms().get();
-	    if (roomMap == null) {
-	        return;
-	    }
-	    String[] columnNames = {
-	        "Broj Sobe", "Tip Sobe", "Status Sobe"
-	    };
-	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
-	        @Override
-	        public boolean isCellEditable(int row, int column) {
-	            return false;
-	        }
-	    };
+        Map<String, Room> roomMap = hotelManager.getRooms().get();
+        if (roomMap == null) {
+            return;
+        }
+        String[] columnNames = {
+            "Broj Sobe", "Tip Sobe", "Status Sobe", "Atributi"
+        };
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
 
-	    for (Room room : roomMap.values()) {
-	        Object[] row = {
-	            room.getRoomNumber(),
-	            room.getRoomType(),
-	            room.getRoomStatus()
-	        };
-	        tableModel.addRow(row);
-	    }
+        for (Room room : roomMap.values()) {
+            String attributes = String.join("; ", room.getRoomAttributes());
+            Object[] row = {
+                room.getRoomNumber(),
+                room.getRoomType(),
+                room.getRoomStatus(),
+                attributes
+            };
+            tableModel.addRow(row);
+        }
 
-	    JTable table = new JTable(tableModel);
-	    JScrollPane scrollPane = new JScrollPane(table);
+        JTable table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
 
-	    contentPane.removeAll();
-	    contentPane.add(scrollPane, BorderLayout.CENTER);
-	    contentPane.revalidate();
-	    contentPane.repaint();
-	}
+        contentPane.removeAll();
+        contentPane.add(scrollPane, BorderLayout.CENTER);
+        contentPane.revalidate();
+        contentPane.repaint();
+    }
+
     
     protected void addRoom() {
         String roomNumber = JOptionPane.showInputDialog("Unesite broj sobe:");
@@ -1093,16 +1130,50 @@ public class AdministratorFrame extends JFrame {
         if (roomTypeString != null && roomStatusString != null) {
             RoomType roomType = RoomType.valueOf(roomTypeString.toUpperCase());
             RoomStatus roomStatus = RoomStatus.valueOf(roomStatusString.toUpperCase());
-            Room newRoom = new Room(roomType, roomNumber, roomStatus);
-            hotelManager.addRoom(newRoom);
-            hotelController.addRoom(newRoom);
-            JOptionPane.showMessageDialog(null, "Soba je uspešno dodata.");
-            showRooms();
+            JCheckBox airConditioning = new JCheckBox("Klima uređaj");
+            JCheckBox tv = new JCheckBox("TV");
+            JCheckBox balcony = new JCheckBox("Balkon");
+            JCheckBox nonSmoking = new JCheckBox("Ne-pušačka");
+            JCheckBox smoking = new JCheckBox("Pušačka");
+            JCheckBox safe = new JCheckBox("Sef");
+            JCheckBox miniBar = new JCheckBox("Mini-bar");
+
+            JPanel attributePanel = new JPanel();
+            attributePanel.setLayout(new BoxLayout(attributePanel, BoxLayout.Y_AXIS));
+            attributePanel.add(new JLabel("Izaberite dodatne atribute sobe:"));
+            attributePanel.add(airConditioning);
+            attributePanel.add(tv);
+            attributePanel.add(balcony);
+            attributePanel.add(nonSmoking);
+            attributePanel.add(smoking);
+            attributePanel.add(safe);
+            attributePanel.add(miniBar);
+
+            int result = JOptionPane.showConfirmDialog(null, attributePanel, 
+                     "Dodatni atributi", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                List<String> roomAttributes = new ArrayList<>();
+                if (airConditioning.isSelected()) roomAttributes.add("Klima uređaj");
+                if (tv.isSelected()) roomAttributes.add("TV");
+                if (balcony.isSelected()) roomAttributes.add("Balkon");
+                if (nonSmoking.isSelected()) roomAttributes.add("Ne-pušačka");
+                if (smoking.isSelected()) roomAttributes.add("Pušačka");
+                if (safe.isSelected()) roomAttributes.add("Sef");
+                if (miniBar.isSelected()) roomAttributes.add("Mini-bar");
+
+                Room newRoom = new Room(roomType, roomNumber, roomStatus);
+                newRoom.setRoomAttributes(roomAttributes);
+                hotelManager.addRoom(newRoom);
+                hotelController.addRoom(newRoom);
+                JOptionPane.showMessageDialog(null, "Soba je uspešno dodata.");
+                showRooms();
+            } else {
+                JOptionPane.showMessageDialog(null, "Dodavanje sobe je otkazano.");
+            }
         } else {
             JOptionPane.showMessageDialog(null, "Dodavanje sobe je otkazano.");
         }
     }
-
     
     
     protected void updateRoom() {
@@ -1538,6 +1609,7 @@ public class AdministratorFrame extends JFrame {
 	    try {
 	        String startDateStr = JOptionPane.showInputDialog("Unesite datum početka rezervacije (dd.MM.yyyy.):");
 	        LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
+	        LocalDate creationDate = LocalDate.now();
 	        String endDateStr = JOptionPane.showInputDialog("Unesite datum kraja rezervacije (dd.MM.yyyy.):");
 	        LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy."));
 	        String username = JOptionPane.showInputDialog("Unesite korisničko ime korisnika");
@@ -1546,6 +1618,40 @@ public class AdministratorFrame extends JFrame {
 	            JOptionPane.showMessageDialog(null, "Ne postoji gost sa tim korisničkim imenom.", "Greška", JOptionPane.ERROR_MESSAGE);
 	            return;
 	        }
+	        
+	        JCheckBox airConditioning = new JCheckBox("Klima uređaj");
+	        JCheckBox tv = new JCheckBox("TV");
+	        JCheckBox balcony = new JCheckBox("Balkon");
+	        JCheckBox nonSmoking = new JCheckBox("Ne-pušačka soba");
+	        JCheckBox smoking = new JCheckBox("Pušačka soba");
+	        JCheckBox safe = new JCheckBox("Sef");
+	        JCheckBox miniBar = new JCheckBox("Mini-bar");
+
+	        JPanel attributePanel = new JPanel();
+	        attributePanel.setLayout(new BoxLayout(attributePanel, BoxLayout.Y_AXIS));
+	        attributePanel.add(new JLabel("Izaberite dodatne atribute sobe:"));
+	        attributePanel.add(airConditioning);
+	        attributePanel.add(tv);
+	        attributePanel.add(balcony);
+	        attributePanel.add(nonSmoking);
+	        attributePanel.add(smoking);
+	        attributePanel.add(safe);
+	        attributePanel.add(miniBar);
+
+	        int result = JOptionPane.showConfirmDialog(null, attributePanel, 
+	                "Dodatni atributi", JOptionPane.OK_CANCEL_OPTION);
+	        if (result != JOptionPane.OK_OPTION) {
+	            return;
+	        }
+
+	        List<String> roomAttributes = new ArrayList<>();
+	        if (airConditioning.isSelected()) roomAttributes.add("Klima uređaj");
+	        if (tv.isSelected()) roomAttributes.add("TV");
+	        if (balcony.isSelected()) roomAttributes.add("Balkon");
+	        if (nonSmoking.isSelected()) roomAttributes.add("Ne-pušačka");
+	        if (smoking.isSelected()) roomAttributes.add("Pušačka");
+	        if (safe.isSelected()) roomAttributes.add("Sef");
+	        if (miniBar.isSelected()) roomAttributes.add("Mini-bar");
 
 	        String[] roomTypesArray = {"TWIN", "DOUBLE", "SINGLE", "TRIPLE"};
 	        String roomTypeString = (String) JOptionPane.showInputDialog(null,
@@ -1558,7 +1664,7 @@ public class AdministratorFrame extends JFrame {
 
 	        RoomType roomType = RoomType.valueOf(roomTypeString.trim().toUpperCase());
 
-	        List<Room> availableRooms = hotelManager.getAvailableRooms(roomType, startDate, endDate);
+	        List<Room> availableRooms = hotelManager.getAvailableRooms(roomType, startDate, endDate, roomAttributes);
 	        if (availableRooms.isEmpty()) {
 	            JOptionPane.showMessageDialog(null, "Nema dostupnih soba za navedeni tip i period.", "Greška", JOptionPane.ERROR_MESSAGE);
 	            return;
@@ -1588,7 +1694,7 @@ public class AdministratorFrame extends JFrame {
 	                String numberOfGuestsStr = JOptionPane.showInputDialog("Unesite broj gostiju:");
 	                int numberOfGuests = Integer.parseInt(numberOfGuestsStr);
 
-	                Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, selectedRoom, guest);
+	                Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, selectedRoom, guest, creationDate);
 	                List<String> additionalServicesOptions = new ArrayList<>();
 	                for (String additionalService : hotelManager.getAdditionalServices().get().keySet()) {
 	                    additionalServicesOptions.add(additionalService);
@@ -1773,5 +1879,168 @@ public class AdministratorFrame extends JFrame {
 	    contentPane.add(scrollPane, BorderLayout.CENTER);
 	    contentPane.revalidate();
 	    contentPane.repaint();
+	}
+	
+
+    protected void reservationStatusChart() {
+    	 Map<ReservationStatus, Integer> statusCounts = new HashMap<>();
+         for (ReservationStatus status : ReservationStatus.values()) {
+             statusCounts.put(status, 0);
+         }
+
+         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+
+         for (Reservation reservation : hotelManager.getReservations().get().values()) {
+             if (reservation.getCreationDate().isAfter(thirtyDaysAgo)) {
+                 ReservationStatus status = reservation.getReservationStatus();
+                 statusCounts.put(status, statusCounts.get(status) + 1);
+             }
+         }
+
+         for (ReservationRequest reservationRequest : hotelManager.getReservationRequests().getReservationRequests()) {
+             if (reservationRequest.getCreationDate().isAfter(thirtyDaysAgo)) {
+                 ReservationStatus status = reservationRequest.getReservationStatus();
+                 statusCounts.put(status, statusCounts.get(status) + 1);
+             }
+         }
+
+         PieChart chart = new PieChartBuilder().width(800).height(600).title("Status rezervacija u prethodnih 30 dana").build();
+
+         chart.getStyler().setLegendVisible(true);
+         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+
+         for (Map.Entry<ReservationStatus, Integer> entry : statusCounts.entrySet()) {
+             if (entry.getValue() > 0) {
+                 chart.addSeries(entry.getKey().toString(), entry.getValue());
+             }
+         }
+
+         XChartPanel<PieChart> chartPanel = new XChartPanel<>(chart);
+
+         JFrame frame = new JFrame("Reservation Status Chart");
+         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+         frame.setSize(800, 600);
+         frame.setLocationRelativeTo(null);  
+         frame.getContentPane().add(chartPanel);
+         frame.setVisible(true);
+     }
+    
+
+	protected void roomsPerHousekeeperChart() {
+		Map<String, RoomCleaningRecord> roomCleaningRecords = hotelManager.getRoomCleaningRecordManager().get();
+		Map<String,Housekeeper> housekeepers = hotelManager.getHousekeepers().get();
+		Map<String, Integer> cleaningCounts = new HashMap<>();
+		LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+		for(Housekeeper housekeeper: housekeepers.values()) {
+			cleaningCounts.put(housekeeper.getUsername(), 0);
+		}
+		
+		for(RoomCleaningRecord roomCleaningRecord: roomCleaningRecords.values()) {
+			if(roomCleaningRecord.getDate().isAfter(thirtyDaysAgo)) {
+				int value =  cleaningCounts.get(roomCleaningRecord.getHousekeeper().getUsername());
+				cleaningCounts.put(roomCleaningRecord.getHousekeeper().getUsername(), value+1);
+			}
+			
+		}
+		
+		PieChart chart = new PieChartBuilder().width(800).height(600).title("Opterećenje sobarica u prethodnih 30 dana").build();
+
+        chart.getStyler().setLegendVisible(true);
+        chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+
+        for (Map.Entry<String, Integer> entry : cleaningCounts.entrySet()) {
+            if (entry.getValue() > 0) {
+                chart.addSeries(entry.getKey(), entry.getValue());
+            }
+        }
+
+        XChartPanel<PieChart> chartPanel = new XChartPanel<>(chart);
+
+        JFrame frame = new JFrame("Rooms per housekeeper Chart");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);  
+        frame.getContentPane().add(chartPanel);
+        frame.setVisible(true);
+	}
+
+	protected void incomeByRoomTypeChart() {
+	    Map<Integer, String> monthLabels = new HashMap<>();
+	    monthLabels.put(0, "Januar");
+	    monthLabels.put(1, "Februar");
+	    monthLabels.put(2, "Mart");
+	    monthLabels.put(3, "April");
+	    monthLabels.put(4, "Maj");
+	    monthLabels.put(5, "Jun");
+	    monthLabels.put(6, "Jul");
+	    monthLabels.put(7, "Avgust");
+	    monthLabels.put(8, "Septembar");
+	    monthLabels.put(9, "Oktobar");
+	    monthLabels.put(10, "Novembar");
+	    monthLabels.put(11, "Decembar");
+
+	    LocalDate lastYearStartDate = LocalDate.now().minusYears(1);
+
+	    double[] xData = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}; 
+	    double[] singleRoom = new double[12];
+	    double[] doubleRoom = new double[12];
+	    double[] twinRoom = new double[12];
+	    double[] tripleRoom = new double[12];
+	    double[] total = new double[12];
+
+	    // Iterate through revenues
+	    for (Revenue revenue : hotelManager.getRevenues().getRevenues()) {
+	        LocalDate revenueDate = revenue.getDate();
+
+	        if (revenueDate.isAfter(lastYearStartDate) || revenueDate.isEqual(lastYearStartDate)) {
+	            int revenueMonth = revenueDate.getMonthValue() - 1;
+	            
+	            switch (revenue.getRoomType()) {
+	                case SINGLE:
+	                    singleRoom[revenueMonth] += revenue.getAmount();
+	                    break;
+	                case DOUBLE:
+	                    doubleRoom[revenueMonth] += revenue.getAmount();
+	                    break;
+	                case TWIN:
+	                    twinRoom[revenueMonth] += revenue.getAmount();
+	                    break;
+	                case TRIPLE:
+	                    tripleRoom[revenueMonth] += revenue.getAmount();
+	                    break;
+	                default:
+	                    break;
+	            }
+	            
+	            total[revenueMonth] += revenue.getAmount();
+	        }
+	    }
+
+	    XYChart chart = new XYChartBuilder().width(800).height(600).title("Prihodi po tipu sobe").xAxisTitle("Mesec").yAxisTitle("Prihodi").build();
+
+	    chart.getStyler().setLegendVisible(true);
+	    chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+	    chart.getStyler().setDecimalPattern("#");
+
+	    chart.addSeries("SINGLE", xData, singleRoom);
+	    chart.addSeries("TWIN", xData, twinRoom);
+	    chart.addSeries("DOUBLE", xData, doubleRoom);
+	    chart.addSeries("TRIPLE", xData, tripleRoom);
+	    chart.addSeries("TOTAL", xData, total);
+
+
+	    chart.setCustomXAxisTickLabelsFormatter(number -> {
+	        int index = number.intValue();
+	        return monthLabels.getOrDefault(index, "");
+	    });
+
+	    XChartPanel<XYChart> chartPanel = new XChartPanel<>(chart);
+
+	    JFrame frame = new JFrame("Prihodi po tipu sobe");
+	    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	    frame.setSize(800, 600);
+	    frame.setLocationRelativeTo(null);
+	    frame.getContentPane().add(chartPanel);
+	    frame.setVisible(true);
 	}
 }

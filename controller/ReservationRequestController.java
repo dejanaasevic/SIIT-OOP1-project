@@ -38,6 +38,7 @@ public class ReservationRequestController {
 	            int numberOfGuests = Integer.parseInt(data[1]);
 	            LocalDate startDate = LocalDate.parse(data[2], formatter);
 	            LocalDate endDate = LocalDate.parse(data[3], formatter);
+	            LocalDate creationDate = LocalDate.parse(data[9],formatter);
 	            ReservationStatus reservationStatus = ReservationStatus.valueOf(data[4]);
 	            String guestUsername = data[5];
 	            Guest guest = hotelManager.getGuests().FindById(guestUsername);
@@ -45,11 +46,10 @@ public class ReservationRequestController {
 	                continue;
 	            }
 	            
-	            ReservationRequest reservationRequest = new ReservationRequest(roomType, numberOfGuests, startDate, endDate, guest);
+	            ReservationRequest reservationRequest = new ReservationRequest(roomType, numberOfGuests, startDate, endDate, guest, creationDate);
 	            reservationRequest.setReservationStatus(reservationStatus);
 	            
 	            if (data.length > 6) {
-	            	
 	                String[] additionalServices = data[6].split(";");
 	                for (String serviceName : additionalServices) {                	
 	                    AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName.trim());	                    
@@ -59,6 +59,14 @@ public class ReservationRequestController {
 	            }
 	            String price = data[7];
 	            reservationRequest.setPrice(Double.parseDouble(price));
+	            
+	            if (data.length > 8) {
+                    String[] roomAttributes = data[8].split(";");
+                    for (String attribute : roomAttributes) {
+                        reservationRequest.addRoomAttribute(attribute.trim());
+                    }
+                }
+	            
 	            hotelManager.addReservationRequest(reservationRequest);
 	        }
 	    } catch (IOException e) {

@@ -39,32 +39,35 @@ public class ReservationController {
 	            int numberOfGuests = Integer.parseInt(data[1].trim());
 	            LocalDate startDate = LocalDate.parse(data[2].trim(), formatter);
 	            LocalDate endDate = LocalDate.parse(data[3].trim(), formatter);
+	            LocalDate creationDate = LocalDate.parse(data[10].trim(),formatter);
 	            ReservationStatus reservationStatus = ReservationStatus.valueOf(data[4].trim());
 	            String guestUsername = data[5].trim();
-	            String roomNumber = data[7].trim();
-	            double price = Double.parseDouble(data[8].trim());
-	            
+	            String[] additionalServicesArray = data[6].split(";");
+	            String[] roomAttributesArray = data[7].split(";");
+	            String roomNumber = data[8].trim();
+	            double price = Double.parseDouble(data[9].trim());
+
 	            Room room = hotelManager.getRooms().FindById(roomNumber);
 	            Guest guest = hotelManager.getGuests().FindById(guestUsername);
 	            if (guest == null || room == null) {
 	                continue;
 	            }
-	            
-	            Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, room, guest);
-	            System.out.println(reservation.getID());
+
+	            Reservation reservation = new Reservation(roomType, numberOfGuests, startDate, endDate, room, guest, creationDate);
 	            reservation.setReservationStatus(reservationStatus);
 	            reservation.setPrice(price);
-	            
-	            if (data.length > 6 && !data[6].trim().isEmpty()) {
-	                String[] additionalServices = data[6].split(";");
-	                for (String serviceName : additionalServices) {
-	                    AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName.trim());
-	                    if (service != null) {
-	                        reservation.addAdditionalService(service);
-	                    }
+
+	            for (String serviceName : additionalServicesArray) {
+	                AdditionalService service = hotelManager.getAdditionalServices().FindById(serviceName.trim());
+	                if (service != null) {
+	                    reservation.addAdditionalService(service);
 	                }
 	            }
-	            
+
+	            for (String attribute : roomAttributesArray) {
+	                reservation.addRoomAttribute(attribute.trim());
+	            }
+
 	            hotelManager.addReservation(reservation);
 	        }
 	    } catch (IOException e) {
@@ -131,7 +134,7 @@ public class ReservationController {
 	            String[] data = line.split(",");
 	            String csvStartDate = data[2];
 	            String csvEndDate = data[3];
-	            String csvRoomStr = data[7];
+	            String csvRoomStr = data[8];
 
 	            if (csvStartDate.equals(startDate.toString())
 	                && csvEndDate.equals(endDate.toString()) && csvRoomStr.equals(roomStr)) {

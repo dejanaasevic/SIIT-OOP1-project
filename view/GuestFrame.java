@@ -10,8 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -149,9 +152,11 @@ public class GuestFrame extends JFrame {
 	        "Datum Početka", 
 	        "Datum Kraja", 
 	        "Status Rezervacije", 
+	        "Osobine sobe",
 	        "Dodatne Usluge",
 	        "Cena"
 	    };
+	   
 	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
 	        @Override
 	        public boolean isCellEditable(int row, int column) {
@@ -172,12 +177,14 @@ public class GuestFrame extends JFrame {
 	        if (additionalServices.length() > 0) {
 	            additionalServices.setLength(additionalServices.length() - 2);
 	        }
+	        String roomAttributesString = String.join(", ", reservationRequest.getRoomAttributes());
 	        Object[] row = {
 	        		reservationRequest.getRoomType().name(),
 		            reservationRequest.getNumberOfGuests(),
 		            reservationRequest.getStartDate().format(formatter),
 		            reservationRequest.getEndDate().format(formatter),
 		            reservationRequest.getReservationStatus().name(),
+		            roomAttributesString,
 		            additionalServices.toString(),
 		            reservationRequest.getPrice()
 	        };
@@ -214,7 +221,56 @@ public class GuestFrame extends JFrame {
 	            JOptionPane.showMessageDialog(null, "Datum odlaska ne može biti pre datuma dolaska.");
 	            return;
 	        }
-	        List<String> roomTypesList = hotelManager.getAvailableRoomTypes(startDate, endDate);
+	        
+	        JCheckBox airConditioning = new JCheckBox("Klima uređaj");
+	        JCheckBox tv = new JCheckBox("TV");
+	        JCheckBox balcony = new JCheckBox("Balkon");
+	        JCheckBox nonSmoking = new JCheckBox("Ne-pušačka soba");
+	        JCheckBox smoking = new JCheckBox("Pušačka soba");
+	        JCheckBox safe = new JCheckBox("Sef");
+	        JCheckBox miniBar = new JCheckBox("Mini-bar");
+
+	        JPanel attributePanel = new JPanel();
+	        attributePanel.setLayout(new BoxLayout(attributePanel, BoxLayout.Y_AXIS));
+	        attributePanel.add(new JLabel("Izaberite dodatne atribute sobe:"));
+	        attributePanel.add(airConditioning);
+	        attributePanel.add(tv);
+	        attributePanel.add(balcony);
+	        attributePanel.add(nonSmoking);
+	        attributePanel.add(smoking);
+	        attributePanel.add(safe);
+	        attributePanel.add(miniBar);
+
+	        int result = JOptionPane.showConfirmDialog(null, attributePanel, 
+	                "Dodatni atributi", JOptionPane.OK_CANCEL_OPTION);
+	        if (result != JOptionPane.OK_OPTION) {
+	            return;
+	        }
+
+	        List<String> roomAttributes = new ArrayList<>();
+	        if (airConditioning.isSelected()) {
+	        	roomAttributes.add("Klima uređaj");
+	        }
+	        if (tv.isSelected()) {
+	        	roomAttributes.add("TV");
+	        }
+	        if (balcony.isSelected()) {
+	        	roomAttributes.add("Balkon");
+	        }
+	        if (nonSmoking.isSelected()) {
+	        	roomAttributes.add("Ne-pušačka");
+	        }
+	        if (smoking.isSelected()) {
+	        	roomAttributes.add("Pušačka");
+	        }
+	        if (safe.isSelected()) {
+	        	roomAttributes.add("Sef");
+	        }
+	        if (miniBar.isSelected()) {
+	        	roomAttributes.add("Mini-bar");
+	        }
+
+	        List<String> roomTypesList = hotelManager.getAvailableRoomTypes(startDate, endDate, roomAttributes);
 	        String[] roomTypes = new String [roomTypesList.size()];
 	        for(int i = 0; i<roomTypesList.size(); i++ ) {
 	        	roomTypes[i] = roomTypesList.get(i);
@@ -235,7 +291,8 @@ public class GuestFrame extends JFrame {
 	            JOptionPane.showMessageDialog(null, "Nema prijavljenog korisnika. Molimo prijavite se pre kreiranja rezervacije.");
 	            return;
 	        }
-	        ReservationRequest reservationRequest = new ReservationRequest(roomType, numberOfGuests, startDate, endDate, currentGuest);
+	        LocalDate creationDate = LocalDate.now();
+	        ReservationRequest reservationRequest = new ReservationRequest(roomType, numberOfGuests, startDate, endDate, currentGuest,creationDate);
 	        
 	        List<String> additionalServicesOptions = new ArrayList<>();
             for (String additionalService : hotelManager.getAdditionalServices().get().keySet()) {
@@ -264,6 +321,7 @@ public class GuestFrame extends JFrame {
             }
 	        double price =  calculateReservationRequestPrice(reservationRequest);
 	        reservationRequest.setPrice(price);
+	        reservationRequest.setRoomAttributes(roomAttributes);
 	        hotelManager.addReservationRequest(reservationRequest);
 	        hotelController.addReservationRequest(reservationRequest);
 	        
@@ -286,7 +344,7 @@ public class GuestFrame extends JFrame {
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
 	    String[] columnNames = {
 	        "Datum početka", "Datum kraja", "Broj sobe", "Tip sobe", "Broj Gostiju", 
-	        "Status", "Dodatne usluge", "Cena"
+	        "Status","Osobine sobe", "Dodatne usluge", "Cena"
 	    };
 	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
 	        @Override
@@ -303,7 +361,8 @@ public class GuestFrame extends JFrame {
 	                if (i < additionalServices.size() - 1) {
 	                    servicesString.append(";");
 	                }
-	            }        
+	            }
+	            String roomAttributesString = String.join(", ", reservation.getRoomAttributes());
 	            Object[] row = {
 	                reservation.getStartDate().format(formatter),
 	                reservation.getEndDate().format(formatter),
@@ -311,6 +370,7 @@ public class GuestFrame extends JFrame {
 	                reservation.getRoomType(),
 	                reservation.getNumberOfGuests(),
 	                reservation.getReservationStatus(),
+	                roomAttributesString,
 	                servicesString.toString(),
 	                reservation.getTotalPrice()
 	            };
@@ -358,7 +418,7 @@ public class GuestFrame extends JFrame {
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.");
 	    String[] columnNames = {
 	        "Datum početka", "Datum kraja", "Broj sobe", "Tip sobe", "Broj Gostiju", 
-	        "Status", "Dodatne usluge", "Cena"
+	        "Status", "Osobine sobe", "Dodatne usluge", "Cena"
 	    };
 	    DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
 	        @Override
@@ -379,6 +439,8 @@ public class GuestFrame extends JFrame {
 	                }
 	            }
 	            
+	            String roomAttributesString = String.join(", ", reservation.getRoomAttributes());
+	            
 	            Object[] row = {
 	                reservation.getStartDate().format(formatter),
 	                reservation.getEndDate().format(formatter),
@@ -386,6 +448,7 @@ public class GuestFrame extends JFrame {
 	                reservation.getRoomType(),
 	                reservation.getNumberOfGuests(),
 	                reservation.getReservationStatus(),
+	                roomAttributesString,
 	                servicesString.toString(),
 	                reservation.getTotalPrice()
 	            };
@@ -476,13 +539,6 @@ public class GuestFrame extends JFrame {
 	}
 	
 	protected void reservationReport() {
-		// Gost vidi sve svoje rezervacije i njihove statuse, troškove za svaku rezervaciju (imati na
-		//umu da nema troškova na rezervacije koje su odbijene od strane hotela) i ukupan trošak
-		//za sve rezervacije
-		
-		// rezervacije,status rezervacija, troskovi ukupan trosak za sve rezervacije
-		// tabela --> start date, end date, tip, trosak, ukupan trosak kao dialog
-		
 		Map<String, Reservation> reservationMap = hotelManager.getReservations().get();
 		List<ReservationRequest> reservationRequests = hotelManager.getReservationRequests().getReservationRequests();
 		

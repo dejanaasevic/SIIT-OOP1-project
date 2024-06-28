@@ -24,23 +24,29 @@ public class RoomController {
 	public RoomController(HotelManager hotelManager) {
 		this.hotelManager = hotelManager;
 	}
-	
+		
 	public void readRoomDataFromCSV() {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                String roomNumber = values[0];
-                RoomType roomType = RoomType.valueOf(values[1]);
-                RoomStatus roomStatus = RoomStatus.valueOf(values[2]);
-                Room room = new Room(roomType, roomNumber, roomStatus);
-                hotelManager.addRoom(room); 
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-	
+	    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+	        String line;
+	        while ((line = br.readLine()) != null) {
+	            String[] values = line.split(",", 4);
+	            String roomNumber = values[0];
+	            RoomType roomType = RoomType.valueOf(values[1]);
+	            RoomStatus roomStatus = RoomStatus.valueOf(values[2]);
+	            Room room = new Room(roomType, roomNumber, roomStatus);
+	            if (values.length > 3) {
+	                String[] attributes = values[3].split(";");
+	                for (String attribute : attributes) {
+	                    room.addRoomAttribute(attribute.trim());
+	                }
+	            }
+	            hotelManager.addRoom(room); 
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+
 	public boolean writeRoomToCSV(Room newRoom) {
 		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename, true)))) {
             writer.println(newRoom.toCSVString());

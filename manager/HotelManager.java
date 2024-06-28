@@ -300,10 +300,11 @@ public class HotelManager {
 	    return true; 
 	}
 	
-	public List<Room> getAvailableRooms(RoomType roomType, LocalDate startDate, LocalDate endDate) {
+	public List<Room> getAvailableRooms(RoomType roomType, LocalDate startDate, LocalDate endDate, List<String> attributes) {
 		List<Room> availableRooms = new ArrayList<>();
 		for(Room room: rooms.get().values()) {
-			if(isRoomAvailable(room, startDate, endDate) && room.getRoomType().equals(roomType)) {
+			if(isRoomAvailable(room, startDate, endDate) && room.getRoomType().equals(roomType)
+					&&  room.getRoomAttributes().containsAll(attributes) ) {
 				availableRooms.add(room);
 			}
 		}
@@ -443,14 +444,24 @@ public class HotelManager {
 	    }
 	}
 
-	public List<String> getAvailableRoomTypes(LocalDate startDate, LocalDate endDate) {
+	public List<String> getAvailableRoomTypes(LocalDate startDate, LocalDate endDate, List<String> roomAttributes) {
 	    List<String> availableRoomTypes = new ArrayList<>();
 	    for (Room room : rooms.get().values()) {
-	        if (isRoomAvailable(room, startDate, endDate) && !availableRoomTypes.contains(room.getRoomType().toString())) {
+	        if (isRoomAvailable(room, startDate, endDate) && !availableRoomTypes.contains(room.getRoomType().toString()) &&
+	        		hasAllRoomAttributest(room, roomAttributes)) {
 	            availableRoomTypes.add(room.getRoomType().toString());
 	        }
 	    }
 	    return availableRoomTypes;
+	}
+
+	private boolean hasAllRoomAttributest(Room room, List<String> roomAttributes) {
+		for(String attribute :roomAttributes ) {
+			if(!room.getRoomAttributes().contains(attribute)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void addRoomCleaningRecord(String id, RoomCleaningRecord roomCleaningRecord) {
