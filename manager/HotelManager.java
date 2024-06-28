@@ -289,7 +289,7 @@ public class HotelManager {
 		 System.out.println();
 	}
 
-	private boolean isRoomAvailable(Room room, LocalDate startDate, LocalDate endDate) {
+	public boolean isRoomAvailable(Room room, LocalDate startDate, LocalDate endDate) {
 	    for (Reservation reservation : reservations.get().values()) {
 	        if (reservation.getRoom().equals(room)) {
 	            if (!(endDate.isBefore(reservation.getStartDate()) || startDate.isAfter(reservation.getEndDate()))) {
